@@ -1,0 +1,12 @@
+html, body {
+  height: 100%;
+  margin: 0;
+}
+body {
+  overflow-y: auto; /* Allow main page scroll */
+}
+body.dragging {
+  cursor: ns-resize;
+  user-select: none; /* Prevent text selection during drag */
+}
+/* Removed: body.dragging * { pointer-events: none; } */
