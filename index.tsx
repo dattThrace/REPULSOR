@@ -25,6 +25,7 @@ import { WeightHistoryGraph } from './components/WeightHistoryGraph';
 import { generateImpulseResponse } from './utils/effects.ts';
 
 import type { Prompt, PlaybackState } from './types';
+import { inject } from '@vercel/analytics';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 const DEFAULT_MODEL_NAME = 'lyria-realtime-exp';
@@ -1375,3 +1376,6 @@ declare global {
     'prompt-dj-midi': PromptDjMidi;
   }
 }
+
+// Initialize Vercel Web Analytics
+inject();
