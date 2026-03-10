@@ -17,7 +17,7 @@ export class PlayPauseButton extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      pointer-events: none;
+      cursor: pointer;
     }
     :host(:hover) svg {
       transform: scale(1.05);
@@ -27,18 +27,10 @@ export class PlayPauseButton extends LitElement {
       height: 100%;
       transition: all 0.3s ease;
       filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.05));
+      pointer-events: none;
     }
     :host([playbackState="playing"]) svg {
       filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.1));
-    }
-    .hitbox {
-      pointer-events: all;
-      position: absolute;
-      width: 65%;
-      aspect-ratio: 1;
-      top: 9%;
-      border-radius: 50%;
-      cursor: pointer;
     }
     .loader {
       stroke: #ffffff;
@@ -179,7 +171,7 @@ export class PlayPauseButton extends LitElement {
   }
 
   override render() {
-    return html`${this.renderSvg()}<div class="hitbox"></div>`;
+    return html`${this.renderSvg()}`;
   }
 }
 

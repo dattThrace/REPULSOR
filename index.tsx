@@ -275,8 +275,12 @@ class PromptDjMidi extends LitElement {
     }
 
     play-pause-button {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
       width: 80px;
       height: 80px;
+      z-index: 200;
     }
 
     .loading-spinner {
@@ -522,7 +526,6 @@ class PromptDjMidi extends LitElement {
     if (this.historyIntervalId) clearInterval(this.historyIntervalId);
     this.promptWeightHistory = new Map(); 
     this.historyIntervalId = window.setInterval(this.samplePromptWeightsForHistory, HISTORY_SAMPLE_INTERVAL_MS);
-    this.weightHistoryGraph?.setActive(this.playbackState === 'playing' || this.playbackState === 'loading', this.playbackState);
     this._updateDevSettingsChangedStatus();
   }
 
@@ -621,7 +624,6 @@ class PromptDjMidi extends LitElement {
                  this.toastMessage?.show?.("Critical Error: Prompts not ready after server connection.");
                  this.playbackState = 'stopped';
                  if(this.playPauseButton) this.playPauseButton.playbackState = 'stopped';
-                 this.weightHistoryGraph?.setActive(false, this.playbackState);
                  this.connectionError = true;
                  if (this.session) this.session.close();
                  return;
@@ -639,8 +641,7 @@ class PromptDjMidi extends LitElement {
                       this.playbackState = 'stopped';
                       if(this.playPauseButton) this.playPauseButton.playbackState = 'stopped';
                       this.connectionStatusMessage = `Error starting server playback: ${playError.message}`;
-                      this.weightHistoryGraph?.setActive(false, this.playbackState);
-                      this.connectionError = true;
+                          this.connectionError = true;
                   }
               } else if (this.playbackState !== 'loading' && this.playbackState !== 'playing') {
                   this.connectionStatusMessage = "Server ready, but playback was not initiated or was stopped.";
@@ -677,7 +678,6 @@ class PromptDjMidi extends LitElement {
                      this.playbackState = 'playing';
                      this.connectionStatusMessage = "Playback started.";
                   }
-                  this.weightHistoryGraph?.setActive((this.playbackState as string) === 'playing' || (this.playbackState as string) === 'loading', this.playbackState);
                 }, this.devClientBufferTime * 1000);
               }
 
@@ -685,7 +685,6 @@ class PromptDjMidi extends LitElement {
                 this.playbackState = 'loading';
                 this.connectionStatusMessage = "Re-buffering audio...";
                 this.nextStartTime = 0; 
-                this.weightHistoryGraph?.setActive(true, this.playbackState);
                 return;
               }
               source.start(this.nextStartTime);
@@ -700,7 +699,6 @@ class PromptDjMidi extends LitElement {
             if(this.playPauseButton) this.playPauseButton.playbackState = 'stopped';
             this.toastMessage?.show?.('Connection error, please restart audio.');
             this.connectionStatusMessage = `Connection error: ${errEvent.message || 'Unknown error'}`;
-            this.weightHistoryGraph?.setActive(false, this.playbackState);
             this._updateDevSettingsChangedStatus();
           },
           onclose: (closeEvent: CloseEvent) => {
@@ -710,7 +708,6 @@ class PromptDjMidi extends LitElement {
             if (this.playbackState !== 'stopped') {
                 this.playbackState = 'stopped';
                  if(this.playPauseButton) this.playPauseButton.playbackState = 'stopped';
-                this.weightHistoryGraph?.setActive(false, this.playbackState);
             }
             this.connectionStatusMessage = 'Session closed. Press Play to reconnect.';
             this._updateDevSettingsChangedStatus();
@@ -726,7 +723,6 @@ class PromptDjMidi extends LitElement {
       this.connectionStatusMessage = `Connection failed: ${error.message}`;
       this.playbackState = 'stopped';
       if(this.playPauseButton) this.playPauseButton.playbackState = 'stopped';
-      this.weightHistoryGraph?.setActive(false, this.playbackState);
       this._updateDevSettingsChangedStatus();
     }
   }
@@ -753,7 +749,6 @@ class PromptDjMidi extends LitElement {
       this.playbackState = 'stopped';
       if(this.playPauseButton) this.playPauseButton.playbackState = 'stopped';
       this.connectionStatusMessage = "Internal prompt error. Session stopped.";
-      this.weightHistoryGraph?.setActive(false, this.playbackState);
       if (this.session) this.session.close();
       return;
     }
@@ -769,7 +764,6 @@ class PromptDjMidi extends LitElement {
             this.playbackState = 'stopped'; 
             if (this.playPauseButton) this.playPauseButton.playbackState = 'stopped';
             this.connectionStatusMessage = `Error sending initial prompts. Session stopped.`;
-            this.weightHistoryGraph?.setActive(false, this.playbackState);
             if (this.session) this.session.close(); 
         }
     }
@@ -808,7 +802,6 @@ class PromptDjMidi extends LitElement {
             this.toastMessage?.show?.("Audio system error. Cannot start playback.");
             this.playbackState = 'stopped';
             if(this.playPauseButton) this.playPauseButton.playbackState = 'stopped';
-            this.weightHistoryGraph?.setActive(false, this.playbackState);
             return;
         }
     }
@@ -817,7 +810,6 @@ class PromptDjMidi extends LitElement {
     }
 
     this.playbackState = 'loading';
-    this.weightHistoryGraph?.setActive(true, this.playbackState);
     if(this.playPauseButton) this.playPauseButton.playbackState = 'loading';
 
     if (!this.session || this.connectionError || !this.serverSetupComplete) {
@@ -826,7 +818,6 @@ class PromptDjMidi extends LitElement {
         if (this.connectionError) { 
             this.playbackState = 'stopped'; 
             if(this.playPauseButton) this.playPauseButton.playbackState = 'stopped';
-            this.weightHistoryGraph?.setActive(false, this.playbackState);
             return; 
         }
     } else { 
@@ -839,7 +830,6 @@ class PromptDjMidi extends LitElement {
                 this.playbackState = 'stopped';
                 if(this.playPauseButton) this.playPauseButton.playbackState = 'stopped';
                 this.connectionStatusMessage = "Audio error before resuming. Stopped.";
-                this.weightHistoryGraph?.setActive(false, this.playbackState);
                 return;
             }
         } catch (e: any) {
@@ -848,7 +838,6 @@ class PromptDjMidi extends LitElement {
             this.playbackState = 'paused'; 
             if(this.playPauseButton) this.playPauseButton.playbackState = 'paused';
             this.connectionStatusMessage = "Failed to resume. Still paused.";
-            this.weightHistoryGraph?.setActive(true, this.playbackState); 
         }
     }
   }
@@ -860,7 +849,6 @@ class PromptDjMidi extends LitElement {
     const intendedState = 'paused';
     this.playbackState = intendedState;
     if(this.playPauseButton) this.playPauseButton.playbackState = intendedState;
-    this.weightHistoryGraph?.setActive(true, this.playbackState); 
 
     if (this.session && !this.connectionError && this.serverSetupComplete) {
         try {
@@ -903,7 +891,6 @@ class PromptDjMidi extends LitElement {
     this.nextStartTime = 0;
     this.recordedAudioChunks = []; 
     this.isRecording = false;
-    this.weightHistoryGraph?.setActive(false, this.playbackState);
 
     if (this.historyIntervalId) {
       clearInterval(this.historyIntervalId);
@@ -1245,6 +1232,9 @@ Your response MUST be ONLY the JSON object.
       <toast-message></toast-message>
       <div id="top-controls">
         <div id="buttons">
+          <button @click=${this.togglePlayPause} class=${classMap({ active: this.playbackState === 'playing' || this.playbackState === 'loading' })}>
+            ${this.playbackState === 'playing' || this.playbackState === 'loading' ? 'Pause' : 'Play'}
+          </button>
           <button @click=${this.toggleMidi} class=${classMap({ active: this.showMidi })}>MIDI</button>
           <button @click=${this.toggleDevSettings} class=${classMap({ active: this.showDevSettings })}>Settings</button>
           <button @click=${this.togglePresetsPanel} class=${classMap({ active: this.showPresetsPanel })}>Presets</button>

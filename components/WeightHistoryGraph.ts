@@ -95,11 +95,6 @@ export class WeightHistoryGraph extends LitElement {
     }
   }
 
-  public setActive(isActive: boolean, playbackState: PlaybackState) {
-    this.active = isActive;
-    this.playbackStateForOverlay = playbackState;
-  }
-
   private resizeCanvas() {
     if (!this.canvas || !this.ctx) return;
     const dpr = window.devicePixelRatio || 1;

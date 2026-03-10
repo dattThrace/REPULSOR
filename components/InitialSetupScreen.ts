@@ -289,6 +289,27 @@ export class InitialSetupScreen extends LitElement {
     }
   }
 
+  private quickStart() {
+    this.isLoading = true;
+    this.showToast("Quick starting with default knobs...");
+    
+    const fallbackGroups: KnobGroup[] = DEFAULT_GROUP_ORDER.map(name => ({ groupName: name, knobs: [] }));
+    const usedColors = new Set<string>();
+    for (let i = 0; i < TOTAL_KNOBS; i++) {
+        const group = fallbackGroups[i % fallbackGroups.length];
+        const palette = GROUP_PALETTES[group.groupName] || STYLE_COLORS;
+        const color = this.getNextColorFromPalette(palette, usedColors);
+        usedColors.add(color);
+        group.knobs.push({ text: `${group.groupName} Default ${Math.floor(i / fallbackGroups.length) + 1}`, color });
+    }
+
+    this.dispatchEvent(new CustomEvent<KnobGroup[]>('knobs-generated', {
+      detail: fallbackGroups, 
+      bubbles: true,
+      composed: true,
+    }));
+  }
+
   private getNextColorFromPalette(palette: string[], usedColors: Set<string>): string {
     for (const color of palette) {
         if (!usedColors.has(color.toUpperCase())) return color.toUpperCase();
@@ -594,6 +615,10 @@ Now, generate the full ${TOTAL_KNOBS} knobs according to all these rules.`;
 
         <button @click=${this.generateKnobs} ?disabled=${this.isLoading}>
           ${this.isLoading ? html`<div class="loading-spinner"></div> Generating...` : '🎵 Generate My Knobs!'}
+        </button>
+
+        <button @click=${this.quickStart} ?disabled=${this.isLoading} style="background: transparent; color: #666; border: 1px solid #222; margin-top: 12px; font-size: 0.8rem;">
+          Quick Start (Default Knobs)
         </button>
       </div>
       <div id="toast-container"> <!-- This is for the local toast fallback -->
