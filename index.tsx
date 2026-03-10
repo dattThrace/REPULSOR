@@ -27,6 +27,11 @@ import { generateImpulseResponse } from './utils/effects.ts';
 import type { Prompt, PlaybackState } from './types';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+if (!process.env.API_KEY) {
+  console.warn("[Lyria Debug] API_KEY is not defined in process.env. Lyria calls may fail.");
+} else {
+  console.log("[Lyria Debug] API_KEY is defined.");
+}
 const DEFAULT_MODEL_NAME = 'lyria-realtime-exp';
 const GEMINI_MODEL_NAME = 'gemini-2.5-flash';
 
@@ -458,9 +463,11 @@ class PromptDjMidi extends LitElement {
     }
 
     try {
+      console.log(`[Lyria Debug] Initializing AudioContext with sampleRate: ${this.devAudioContextSampleRate}`);
       this.audioContext = new AudioContextConstructor({ sampleRate: this.devAudioContextSampleRate });
       this.outputNode = this.audioContext.createGain();
       this.audioAnalyser = new AudioAnalyser(this.audioContext);
+      console.log(`[Lyria Debug] AudioContext initialized. State: ${this.audioContext.state}`);
       
       // --- Setup Effects Chain ---
       this.effectsInputNode = this.audioContext.createGain();
@@ -607,12 +614,26 @@ class PromptDjMidi extends LitElement {
     
     this.serverSetupComplete = false; 
     this.connectionStatusMessage = `Connecting to model: ${this.devModelName}...`;
+    console.log(`[Lyria Debug] Connecting to model: ${this.devModelName}`);
+    
+    if (!ai.live || !ai.live.music) {
+      console.error("[Lyria Debug] ai.live.music is not available in the SDK.");
+      this.toastMessage?.show?.("Critical Error: Lyria API not available in SDK.");
+      this.connectionStatusMessage = "Lyria API not available.";
+      this.connectionError = true;
+      this.playbackState = 'stopped';
+      if(this.playPauseButton) this.playPauseButton.playbackState = 'stopped';
+      return;
+    }
+
     try {
       this.session = await ai.live.music.connect({
         model: this.devModelName,
         callbacks: {
           onmessage: async (e: LiveMusicServerMessage) => {
+            console.log(`[Lyria Debug] Received message from server:`, e);
             if (e.setupComplete) {
+              console.log(`[Lyria Debug] Server setup complete.`);
               this.connectionError = false;
               this.serverSetupComplete = true;
               this.activeModelNameInSession = this.devModelName; 
@@ -633,10 +654,11 @@ class PromptDjMidi extends LitElement {
 
               if (this.session && !this.connectionError && (this.playbackState === 'loading' || this.playbackState === 'playing')) {
                   try {
+                      console.log(`[Lyria Debug] Sending PLAY command to server...`);
                       await this.session.play();
                       this.connectionStatusMessage = "Session active. Music generating...";
                   } catch (playError: any) {
-                      console.error('Failed to send PLAY command post-server-setup:', playError);
+                      console.error('[Lyria Debug] Failed to send PLAY command post-server-setup:', playError);
                       this.toastMessage?.show?.(`Error starting playback on server: ${playError.message}`);
                       this.playbackState = 'stopped';
                       if(this.playPauseButton) this.playPauseButton.playbackState = 'stopped';
@@ -654,45 +676,49 @@ class PromptDjMidi extends LitElement {
             if (e.serverContent?.audioChunks !== undefined) {
               if (this.playbackState === 'paused' || this.playbackState === 'stopped') return;
               if (!this.audioContext || this.audioContext.state === 'closed') {
-                console.warn("AudioContext not available or closed, skipping audio processing.");
+                console.warn("[Lyria Debug] AudioContext not available or closed, skipping audio processing.");
                 return;
               }
-              const audioBuffer = await decodeAudioData(
-                decode(e.serverContent?.audioChunks[0].data),
-                this.audioContext,
-                this.devAudioContextSampleRate, // Use dev setting as it's the target for the current context
-                this.devNumDecodingChannels,
-              );
+              try {
+                const audioBuffer = await decodeAudioData(
+                  decode(e.serverContent?.audioChunks[0].data),
+                  this.audioContext,
+                  this.devAudioContextSampleRate, 
+                  this.devNumDecodingChannels,
+                );
 
-              if (this.isRecording) {
-                this.recordedAudioChunks.push(audioBuffer);
-              }
+                if (this.isRecording) {
+                  this.recordedAudioChunks.push(audioBuffer);
+                }
 
-              const source = this.audioContext.createBufferSource();
-              source.buffer = audioBuffer;
-              source.connect(this.outputNode);
-              if (this.nextStartTime === 0) { 
-                this.nextStartTime = this.audioContext.currentTime + this.devClientBufferTime;
-                setTimeout(() => {
-                  if (this.playbackState === 'loading') {
-                     this.playbackState = 'playing';
-                     this.connectionStatusMessage = "Playback started.";
-                  }
-                }, this.devClientBufferTime * 1000);
-              }
+                const source = this.audioContext.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(this.outputNode);
+                if (this.nextStartTime === 0) { 
+                  this.nextStartTime = this.audioContext.currentTime + this.devClientBufferTime;
+                  setTimeout(() => {
+                    if (this.playbackState === 'loading') {
+                       this.playbackState = 'playing';
+                       this.connectionStatusMessage = "Playback started.";
+                    }
+                  }, this.devClientBufferTime * 1000);
+                }
 
-              if (this.nextStartTime < this.audioContext.currentTime) { 
-                this.playbackState = 'loading';
-                this.connectionStatusMessage = "Re-buffering audio...";
-                this.nextStartTime = 0; 
-                return;
+                if (this.nextStartTime < this.audioContext.currentTime) { 
+                  this.playbackState = 'loading';
+                  this.connectionStatusMessage = "Re-buffering audio...";
+                  this.nextStartTime = 0; 
+                  return;
+                }
+                source.start(this.nextStartTime);
+                this.nextStartTime += audioBuffer.duration;
+              } catch (decodeError: any) {
+                console.error("[Lyria Debug] Error decoding or processing audio chunks:", decodeError);
               }
-              source.start(this.nextStartTime);
-              this.nextStartTime += audioBuffer.duration;
             }
           },
           onerror: (errEvent: ErrorEvent) => {
-            console.error('LiveMusicSession error:', errEvent);
+            console.error('[Lyria Debug] LiveMusicSession error:', errEvent);
             this.connectionError = true;
             this.serverSetupComplete = false;
             this.playbackState = 'stopped';
@@ -702,7 +728,7 @@ class PromptDjMidi extends LitElement {
             this._updateDevSettingsChangedStatus();
           },
           onclose: (closeEvent: CloseEvent) => {
-            console.log('LiveMusicSession closed:', closeEvent);
+            console.log('[Lyria Debug] LiveMusicSession closed:', closeEvent);
             this.connectionError = true; 
             this.serverSetupComplete = false;
             if (this.playbackState !== 'stopped') {
@@ -716,7 +742,7 @@ class PromptDjMidi extends LitElement {
       });
 
     } catch (error: any) {
-      console.error('Failed to connect to LiveMusicSession:', error);
+      console.error('[Lyria Debug] Failed to connect to LiveMusicSession:', error);
       this.connectionError = true;
       this.serverSetupComplete = false;
       this.toastMessage?.show?.(`Connection failed: ${error.message}. Please try again.`);
@@ -754,9 +780,10 @@ class PromptDjMidi extends LitElement {
     }
     
     try {
+        console.log(`[Lyria Debug] Sending weighted prompts to server:`, promptsToSend);
         await this.session.setWeightedPrompts({ weightedPrompts: promptsToSend });
     } catch (e: any) {
-        console.error("Error setting session prompts:", e);
+        console.error("[Lyria Debug] Error setting session prompts:", e);
         this.toastMessage?.show?.(`Error sending prompts: ${e.message}. Connection may be unstable.`);
         if (!this.serverSetupComplete || this.playbackState === 'loading') { 
             this.connectionError = true; 
@@ -823,6 +850,7 @@ class PromptDjMidi extends LitElement {
     } else { 
         try {
             this.connectionStatusMessage = "Resuming session...";
+            console.log(`[Lyria Debug] Sending PLAY command (resume) to server...`);
             await this.session.play(); 
             if (this.audioContext) { // Ensure context is valid before using currentTime
                  this.nextStartTime = this.audioContext.currentTime + this.devClientBufferTime; 
@@ -833,7 +861,7 @@ class PromptDjMidi extends LitElement {
                 return;
             }
         } catch (e: any) {
-            console.error("Error sending PLAY command (resume):", e);
+            console.error("[Lyria Debug] Error sending PLAY command (resume):", e);
             this.toastMessage?.show?.(`Error resuming playback: ${e.message}`);
             this.playbackState = 'paused'; 
             if(this.playPauseButton) this.playPauseButton.playbackState = 'paused';
@@ -852,10 +880,11 @@ class PromptDjMidi extends LitElement {
 
     if (this.session && !this.connectionError && this.serverSetupComplete) {
         try {
+            console.log(`[Lyria Debug] Sending PAUSE command to server...`);
             await this.session.pause();
             this.connectionStatusMessage = "Session paused on server.";
         } catch (e: any) {
-            console.error("Error sending PAUSE command:", e);
+            console.error("[Lyria Debug] Error sending PAUSE command:", e);
             this.toastMessage?.show?.(`Error pausing server: ${e.message}. Paused locally.`);
             this.connectionStatusMessage = "Session pause attempted (server error). Paused locally.";
         }
@@ -873,9 +902,10 @@ class PromptDjMidi extends LitElement {
 
     if (this.session && !this.connectionError) { 
         try {
+            console.log(`[Lyria Debug] Sending STOP command to server...`);
             await this.session.stop();
         } catch (e: any) {
-            console.error("Error sending STOP command to Lyria session:", e);
+            console.error("[Lyria Debug] Error sending STOP command to Lyria session:", e);
         } finally {
             if (this.session?.close) { 
                  this.session.close();
