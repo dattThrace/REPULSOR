@@ -7,7 +7,8 @@ import { css, html, LitElement } from 'lit';
 import { customElement, state, query } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
 import { GoogleGenAI, type GenerateContentResponse } from '@google/genai';
-import type { ToastMessage } from './ToastMessage';
+import { ToastMessage } from './ToastMessage';
+import './ToastMessage';
 
 // Use process.env.API_KEY as per guidelines
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -269,15 +270,20 @@ export class InitialSetupScreen extends LitElement {
   }
 
   private showToast(message: string) {
-    const mainToast = this.closest('prompt-dj-midi')?.shadowRoot?.querySelector('toast-message') as ToastMessage | null;
-    if (mainToast) {
+    const mainToast = this.closest('prompt-dj-midi')?.shadowRoot?.querySelector('toast-message') as any;
+    if (mainToast && typeof mainToast.show === 'function') {
         mainToast.show(message);
-    } else if (this.toastMessageElement) {
-        this.toastMessageElement.show(message);
+    } else if (this.toastMessageElement && typeof (this.toastMessageElement as any).show === 'function') {
+        (this.toastMessageElement as any).show(message);
     } else {
-        const tempToast = document.createElement('toast-message') as ToastMessage;
+        const tempToast = document.createElement('toast-message') as any;
         document.body.appendChild(tempToast);
-        tempToast.show(message);
+        if (typeof tempToast.show === 'function') {
+            tempToast.show(message);
+        } else {
+            // Fallback to alert if even the newly created element doesn't have show
+            console.error("ToastMessage component not fully initialized:", message);
+        }
         setTimeout(() => tempToast.remove(), 4000);
         console.warn("Toast element not found for message, created temporary toast:", message);
     }

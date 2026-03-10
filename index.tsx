@@ -445,7 +445,7 @@ class PromptDjMidi extends LitElement {
 
     if (!AudioContextConstructor) {
       console.error('AudioContext is not supported in this browser.');
-      this.toastMessage?.show('AudioContext not supported. Audio features will be disabled.');
+      this.toastMessage?.show?.('AudioContext not supported. Audio features will be disabled.');
       this.connectionStatusMessage = 'AudioContext not supported.';
       this.playbackState = 'stopped';
       this.connectionError = true;
@@ -493,7 +493,7 @@ class PromptDjMidi extends LitElement {
       this.connectionError = false; 
     } catch (e: any) {
         console.error("Error initializing AudioContext:", e);
-        this.toastMessage?.show(`Error initializing audio: ${e.message}`);
+        this.toastMessage?.show?.(`Error initializing audio: ${e.message}`);
         this.connectionStatusMessage = `Audio initialization error: ${e.message}`;
         this.playbackState = 'stopped';
         this.connectionError = true;
@@ -594,7 +594,7 @@ class PromptDjMidi extends LitElement {
     if (!this.audioContext || this.audioContext.state === 'closed') {
         this.initAudioSystem(); 
          if (!this.audioContext || this.connectionError) { // Check audioContext again after init attempt
-            this.toastMessage?.show("Cannot connect: Audio system failed to initialize.");
+            this.toastMessage?.show?.("Cannot connect: Audio system failed to initialize.");
             this.connectionStatusMessage = "Cannot connect: Audio system error.";
             this.connectionError = true;
             this._updateDevSettingsChangedStatus();
@@ -618,7 +618,7 @@ class PromptDjMidi extends LitElement {
 
               if (this.prompts.size === 0) {
                  console.error("connectToSession/onmessage: Server setup complete, but no prompts configured locally. This should not happen.");
-                 this.toastMessage?.show("Critical Error: Prompts not ready after server connection.");
+                 this.toastMessage?.show?.("Critical Error: Prompts not ready after server connection.");
                  this.playbackState = 'stopped';
                  if(this.playPauseButton) this.playPauseButton.playbackState = 'stopped';
                  this.weightHistoryGraph?.setActive(false, this.playbackState);
@@ -635,7 +635,7 @@ class PromptDjMidi extends LitElement {
                       this.connectionStatusMessage = "Session active. Music generating...";
                   } catch (playError: any) {
                       console.error('Failed to send PLAY command post-server-setup:', playError);
-                      this.toastMessage?.show(`Error starting playback on server: ${playError.message}`);
+                      this.toastMessage?.show?.(`Error starting playback on server: ${playError.message}`);
                       this.playbackState = 'stopped';
                       if(this.playPauseButton) this.playPauseButton.playbackState = 'stopped';
                       this.connectionStatusMessage = `Error starting server playback: ${playError.message}`;
@@ -648,7 +648,7 @@ class PromptDjMidi extends LitElement {
             }
             if (e.filteredPrompt) {
               this.filteredPrompts = new Set([...this.filteredPrompts, e.filteredPrompt.text])
-              this.toastMessage?.show(`Prompt filtered: ${e.filteredPrompt.filteredReason}`);
+              this.toastMessage?.show?.(`Prompt filtered: ${e.filteredPrompt.filteredReason}`);
             }
             if (e.serverContent?.audioChunks !== undefined) {
               if (this.playbackState === 'paused' || this.playbackState === 'stopped') return;
@@ -677,7 +677,7 @@ class PromptDjMidi extends LitElement {
                      this.playbackState = 'playing';
                      this.connectionStatusMessage = "Playback started.";
                   }
-                  this.weightHistoryGraph?.setActive(this.playbackState === 'playing' || this.playbackState === 'loading', this.playbackState);
+                  this.weightHistoryGraph?.setActive((this.playbackState as string) === 'playing' || (this.playbackState as string) === 'loading', this.playbackState);
                 }, this.devClientBufferTime * 1000);
               }
 
@@ -698,7 +698,7 @@ class PromptDjMidi extends LitElement {
             this.serverSetupComplete = false;
             this.playbackState = 'stopped';
             if(this.playPauseButton) this.playPauseButton.playbackState = 'stopped';
-            this.toastMessage?.show('Connection error, please restart audio.');
+            this.toastMessage?.show?.('Connection error, please restart audio.');
             this.connectionStatusMessage = `Connection error: ${errEvent.message || 'Unknown error'}`;
             this.weightHistoryGraph?.setActive(false, this.playbackState);
             this._updateDevSettingsChangedStatus();
@@ -722,7 +722,7 @@ class PromptDjMidi extends LitElement {
       console.error('Failed to connect to LiveMusicSession:', error);
       this.connectionError = true;
       this.serverSetupComplete = false;
-      this.toastMessage?.show(`Connection failed: ${error.message}. Please try again.`);
+      this.toastMessage?.show?.(`Connection failed: ${error.message}. Please try again.`);
       this.connectionStatusMessage = `Connection failed: ${error.message}`;
       this.playbackState = 'stopped';
       if(this.playPauseButton) this.playPauseButton.playbackState = 'stopped';
@@ -749,7 +749,7 @@ class PromptDjMidi extends LitElement {
 
     if (promptsToSend.length === 0) {
       console.error("setSessionPrompts: promptsToSend array is empty. Aborting Lyria API call. this.prompts.size:", this.prompts.size);
-      this.toastMessage?.show("Internal Error: Prompts are empty.");
+      this.toastMessage?.show?.("Internal Error: Prompts are empty.");
       this.playbackState = 'stopped';
       if(this.playPauseButton) this.playPauseButton.playbackState = 'stopped';
       this.connectionStatusMessage = "Internal prompt error. Session stopped.";
@@ -762,7 +762,7 @@ class PromptDjMidi extends LitElement {
         await this.session.setWeightedPrompts({ weightedPrompts: promptsToSend });
     } catch (e: any) {
         console.error("Error setting session prompts:", e);
-        this.toastMessage?.show(`Error sending prompts: ${e.message}. Connection may be unstable.`);
+        this.toastMessage?.show?.(`Error sending prompts: ${e.message}. Connection may be unstable.`);
         if (!this.serverSetupComplete || this.playbackState === 'loading') { 
             this.connectionError = true; 
             this.serverSetupComplete = false;
@@ -797,7 +797,7 @@ class PromptDjMidi extends LitElement {
 
   private async play() {
     if (!this.setupComplete) {
-        this.toastMessage?.show("Please complete the setup first.");
+        this.toastMessage?.show?.("Please complete the setup first.");
         return;
     }
     if (this.playbackState === 'playing') return; 
@@ -805,7 +805,7 @@ class PromptDjMidi extends LitElement {
     if (!this.audioContext || this.audioContext.state === 'closed' || this.connectionError) {
         this.initAudioSystem(); 
         if (!this.audioContext || this.connectionError) { 
-            this.toastMessage?.show("Audio system error. Cannot start playback.");
+            this.toastMessage?.show?.("Audio system error. Cannot start playback.");
             this.playbackState = 'stopped';
             if(this.playPauseButton) this.playPauseButton.playbackState = 'stopped';
             this.weightHistoryGraph?.setActive(false, this.playbackState);
@@ -844,7 +844,7 @@ class PromptDjMidi extends LitElement {
             }
         } catch (e: any) {
             console.error("Error sending PLAY command (resume):", e);
-            this.toastMessage?.show(`Error resuming playback: ${e.message}`);
+            this.toastMessage?.show?.(`Error resuming playback: ${e.message}`);
             this.playbackState = 'paused'; 
             if(this.playPauseButton) this.playPauseButton.playbackState = 'paused';
             this.connectionStatusMessage = "Failed to resume. Still paused.";
@@ -868,7 +868,7 @@ class PromptDjMidi extends LitElement {
             this.connectionStatusMessage = "Session paused on server.";
         } catch (e: any) {
             console.error("Error sending PAUSE command:", e);
-            this.toastMessage?.show(`Error pausing server: ${e.message}. Paused locally.`);
+            this.toastMessage?.show?.(`Error pausing server: ${e.message}. Paused locally.`);
             this.connectionStatusMessage = "Session pause attempted (server error). Paused locally.";
         }
     } else {
@@ -950,11 +950,11 @@ class PromptDjMidi extends LitElement {
 
  private async applyDevSettings() {
     if (!this.devSettingsHaveChanged) {
-        this.toastMessage?.show("No relevant developer settings have changed.");
+        this.toastMessage?.show?.("No relevant developer settings have changed.");
         return;
     }
 
-    this.toastMessage?.show("Applying developer settings. Session will restart...");
+    this.toastMessage?.show?.("Applying developer settings. Session will restart...");
     await this.stop(); // Stops session, re-initializes audio context with new sample rate
     await this.play(); // Attempts to reconnect with the new devModelName
     
@@ -966,7 +966,7 @@ class PromptDjMidi extends LitElement {
   private savePreset() {
     const name = this.presetNameInput.value.trim();
     if (!name) {
-      this.toastMessage?.show("Please enter a name for the preset.");
+      this.toastMessage?.show?.("Please enter a name for the preset.");
       return;
     }
     if (this.savedPresets.find(p => p.name === name)) {
@@ -981,7 +981,7 @@ class PromptDjMidi extends LitElement {
 
     this.savedPresets.push({ name, knobGroups: currentKnobGroupsToSave });
     this.savePresetsToLocalStorage();
-    this.toastMessage?.show(`Preset "${name}" saved.`);
+    this.toastMessage?.show?.(`Preset "${name}" saved.`);
     this.presetNameInput.value = ""; 
   }
 
@@ -995,7 +995,7 @@ class PromptDjMidi extends LitElement {
       if (this.session && this.serverSetupComplete && (this.playbackState === 'playing' || this.playbackState === 'paused')) {
           this.setSessionPrompts();
       }
-      this.toastMessage?.show(`Preset "${presetName}" loaded.`);
+      this.toastMessage?.show?.(`Preset "${presetName}" loaded.`);
       this.showPresetsPanel = false; 
     }
   }
@@ -1004,7 +1004,7 @@ class PromptDjMidi extends LitElement {
     if (confirm(`Are you sure you want to delete the preset "${presetName}"?`)) {
       this.savedPresets = this.savedPresets.filter(p => p.name !== presetName);
       this.savePresetsToLocalStorage();
-      this.toastMessage?.show(`Preset "${presetName}" deleted.`);
+      this.toastMessage?.show?.(`Preset "${presetName}" deleted.`);
     }
   }
 
@@ -1013,7 +1013,7 @@ class PromptDjMidi extends LitElement {
       localStorage.setItem('promptDjPresets', JSON.stringify(this.savedPresets));
     } catch (e) {
       console.error("Error saving presets to LocalStorage:", e);
-      this.toastMessage?.show("Could not save presets to local storage.");
+      this.toastMessage?.show?.("Could not save presets to local storage.");
     }
   }
 
@@ -1037,21 +1037,21 @@ class PromptDjMidi extends LitElement {
     this.isRecording = !this.isRecording;
     if (this.isRecording) {
       this.recordedAudioChunks = []; 
-      this.toastMessage?.show("Recording started.");
+      this.toastMessage?.show?.("Recording started.");
     } else {
-      this.toastMessage?.show("Recording stopped.");
+      this.toastMessage?.show?.("Recording stopped.");
       this.saveRecording();
     }
   }
 
   private async saveRecording() {
     if (this.recordedAudioChunks.length === 0) {
-      this.toastMessage?.show("No audio recorded to save.");
+      this.toastMessage?.show?.("No audio recorded to save.");
       return;
     }
 
     if (!this.audioContext || this.audioContext.state === 'closed') {
-        this.toastMessage?.show("Audio context not available. Cannot process recording.");
+        this.toastMessage?.show?.("Audio context not available. Cannot process recording.");
         return;
     }
 
@@ -1084,7 +1084,7 @@ class PromptDjMidi extends LitElement {
     a.click();
     window.URL.revokeObjectURL(url);
     a.remove();
-    this.toastMessage?.show("Recording saved as WAV.");
+    this.toastMessage?.show?.("Recording saved as WAV.");
   }
   
   private async regenerateBoard() {
@@ -1130,11 +1130,11 @@ class PromptDjMidi extends LitElement {
     if (this.isEffectsChainActive) {
         // Connect WET path
         this.outputNode.connect(this.effectsInputNode);
-        this.toastMessage?.show("Master effects enabled.");
+        this.toastMessage?.show?.("Master effects enabled.");
     } else {
         // Connect DRY path (bypass effects)
         this.outputNode.connect(this.effectsBypassNode);
-        this.toastMessage?.show("Master effects bypassed.");
+        this.toastMessage?.show?.("Master effects bypassed.");
     }
   }
   
@@ -1209,7 +1209,7 @@ Your response MUST be ONLY the JSON object.
 
         const params: EffectParameters = JSON.parse(jsonStr);
         this.applyEffectParameters(params);
-        this.toastMessage?.show("Smart effects applied!");
+        this.toastMessage?.show?.("Smart effects applied!");
 
         // If effects were not active, activate them to hear the new sound.
         if (!this.isEffectsChainActive) {
@@ -1218,7 +1218,7 @@ Your response MUST be ONLY the JSON object.
 
     } catch (e: any) {
         console.error("Error applying smart effects:", e);
-        this.toastMessage?.show(`Error: ${e.message || "Could not apply effects."}`);
+        this.toastMessage?.show?.(`Error: ${e.message || "Could not apply effects."}`);
     } finally {
         this.isEffectsLoading = false;
     }
