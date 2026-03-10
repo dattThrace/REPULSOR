@@ -56,118 +56,119 @@ class PromptDjMidi extends LitElement {
       height: 100%;
       display: flex;
       flex-direction: column;
-      justify-content: flex-start; /* Align groups to top */
+      justify-content: flex-start;
       align-items: center;
       box-sizing: border-box;
       position: relative;
-      overflow-y: auto; /* Allow scrolling for groups */
+      overflow-y: auto;
+      background: #050505;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
     }
     :host([data-setup-complete]) {
-       padding-top: 80px; /* Increased padding for top controls */
-       padding-bottom: 20px; /* Padding at the bottom */
-    }
-    #background {
-      will-change: background-image;
-      position: absolute;
-      height: 100%;
-      width: 100%;
-      z-index: -1;
-      background: #111;
+       padding-top: 100px;
+       padding-bottom: 40px;
     }
     
     #knob-groups-container {
       display: flex;
       flex-direction: column;
-      gap: 20px; /* Space between groups */
-      width: 90vmin;
-      max-width: 900px; /* Increased max-width */
-      margin-top: 2vmin;
+      gap: 32px;
+      width: 95%;
+      max-width: 1000px;
+      margin-top: 24px;
     }
 
     .knob-group {
-      background-color: rgba(40, 40, 40, 0.7);
-      border-radius: 8px;
-      padding: 15px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background-color: #111;
+      border-radius: 24px;
+      padding: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
     }
 
     .knob-group-title {
-      color: #eee;
-      font-size: 1.2em;
+      color: #666;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
       margin-top: 0;
-      margin-bottom: 15px;
-      text-align: left;
-      border-bottom: 1px solid rgba(255,255,255,0.2);
-      padding-bottom: 8px;
+      margin-bottom: 24px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding-bottom: 12px;
     }
 
     .knobs-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 150px)); /* Uniform knob size */
-      gap: 2vmin;
-      justify-content: center; /* Center knobs if they don't fill the row */
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 24px;
+      justify-content: center;
     }
     
     prompt-controller {
-      width: 100%; /* Will be constrained by the grid cell's max-width */
-      height: 100%; 
-      display: flex; 
-      align-items: center;
-      justify-content: center;
+      width: 100%;
     }
 
     weight-history-graph {
-      width: 90vmin;
-      max-width: 880px; 
-      height: 240px; /* Increased graph height */
-      margin-top: 2vmin;
-      background-color: rgba(30, 30, 30, 0.7);
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      width: 95%;
+      max-width: 1000px;
+      height: 200px;
+      margin-top: 32px;
+      background-color: #0a0a0a;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      overflow: hidden;
     }
+
     #effects-panel {
-      width: 90vmin;
-      max-width: 880px;
-      margin-top: 2vmin;
-      padding: 15px;
-      background-color: rgba(40, 40, 40, 0.7);
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: #eee;
+      width: 95%;
+      max-width: 1000px;
+      margin-top: 32px;
+      padding: 32px;
+      background-color: #111;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
+
     #effects-panel h2 {
       margin-top: 0;
-      font-size: 1.2em;
-      border-bottom: 1px solid rgba(255,255,255,0.2);
-      padding-bottom: 8px;
-      margin-bottom: 15px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #444;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
     }
-    .effects-controls {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .effects-row {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
+
     #effects-prompt {
-      flex-grow: 1;
-      background: #222;
+      width: 100%;
+      background: #0a0a0a;
       color: #fff;
-      border: 1px solid #555;
-      border-radius: 4px;
-      padding: 8px;
-      resize: vertical;
-      min-height: 40px;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 16px;
+      resize: none;
+      min-height: 80px;
       font-family: inherit;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
     }
+
+    #effects-prompt:focus {
+      outline: none;
+      border-color: #4CAF50;
+      background: #0f0f0f;
+    }
+
     .toggle-switch {
       position: relative;
       display: inline-block;
-      width: 50px;
-      height: 28px;
+      width: 44px;
+      height: 24px;
     }
     .toggle-switch input {
       opacity: 0;
@@ -181,18 +182,18 @@ class PromptDjMidi extends LitElement {
       left: 0;
       right: 0;
       bottom: 0;
-      background-color: #555;
+      background-color: #222;
       transition: .4s;
-      border-radius: 28px;
+      border-radius: 24px;
     }
     .slider:before {
       position: absolute;
       content: "";
-      height: 20px;
-      width: 20px;
+      height: 16px;
+      width: 16px;
       left: 4px;
       bottom: 4px;
-      background-color: white;
+      background-color: #666;
       transition: .4s;
       border-radius: 50%;
     }
@@ -200,147 +201,149 @@ class PromptDjMidi extends LitElement {
       background-color: #4CAF50;
     }
     input:checked + .slider:before {
-      transform: translateX(22px);
+      transform: translateX(20px);
+      background-color: #fff;
     }
 
-    play-pause-button {
-      position: relative;
-      width: 15vmin;
-      margin-top: 2vmin;
-      margin-bottom: 2vmin; 
-    }
     #top-controls {
-      position: fixed; /* Changed to fixed for better visibility on scroll */
+      position: fixed;
       top: 0;
       left: 0;
       width: 100%;
-      padding: 10px 15px; /* Increased padding */
+      padding: 16px 24px;
       box-sizing: border-box;
-      z-index: 100; /* Ensure it's above other content */
-      background: rgba(25, 25, 25, 0.9); /* Darker, more opaque background */
-      backdrop-filter: blur(8px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 100;
+      background: rgba(5, 5, 5, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
+
     #buttons {
       display: flex;
-      gap: 8px; /* Increased gap */
+      gap: 12px;
       align-items: center;
-      flex-wrap: wrap;
     }
+
     button, .button-like {
-      font: inherit;
+      font-family: var(--mono-font);
+      font-size: 0.7rem;
       font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
       cursor: pointer;
       color: #fff;
-      background: rgba(0,0,0,0.3); /* Slightly more visible background */
-      -webkit-font-smoothing: antialiased;
-      border: 1.5px solid #fff;
-      border-radius: 4px;
-      user-select: none;
-      padding: 5px 10px; /* Increased padding */
-      transition: background-color 0.2s, color 0.2s, opacity 0.2s;
-      &.active {
-        background-color: #fff;
-        color: #000;
-      }
-      &.recording {
-        background-color: #ff4747;
-        color: #fff;
-        border-color: #ff0000;
-      }
-      &:hover:not(:disabled) {
-        background-color: rgba(255,255,255,0.2);
-      }
-      &.active:hover:not(:disabled) {
-         background-color: #eee;
-      }
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        background-color: rgba(128, 128, 128, 0.2);
-        border-color: rgba(128,128,128,0.5);
-      }
+      background: #1a1a1a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 8px 16px;
+      transition: all 0.2s ease;
     }
-    select, input[type="text"], input[type="number"], textarea {
-      font: inherit;
-      padding: 8px; /* Increased padding */
+
+    button:hover:not(:disabled) {
+      background: #222;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    button.active {
       background: #fff;
       color: #000;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      outline: none;
-      cursor: pointer;
+      border-color: #fff;
     }
-    input[type="number"] {
-      width: 70px; /* Slightly wider */
+
+    button.recording {
+      background: #ff4444;
+      color: #fff;
+      border-color: #ff4444;
+      animation: pulse 2s infinite;
     }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+
+    #connection-status {
+      font-family: var(--mono-font);
+      font-size: 0.65rem;
+      color: #444;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    play-pause-button {
+      width: 80px;
+      height: 80px;
+    }
+
+    .loading-spinner {
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(255,255,255,0.1);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
     #dev-settings-panel, .presets-panel {
-      padding: 15px; /* Increased padding */
-      margin-top: 10px; /* Increased margin */
-      background: rgba(50, 50, 50, 0.9); /* Slightly more opaque */
-      border-radius: 6px; /* Smoother radius */
+      position: fixed;
+      top: 80px;
+      right: 24px;
+      width: 320px;
+      padding: 24px;
+      background: rgba(15, 15, 15, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      z-index: 110;
       display: flex;
       flex-direction: column;
-      gap: 10px; /* Increased gap */
-      color: white;
-      border: 1px solid rgba(255,255,255,0.1);
+      gap: 16px;
+      animation: slideIn 0.3s ease-out;
     }
-    .presets-panel {
-      max-height: 300px;
-      overflow-y: auto;
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
     }
+
     .dev-setting-row {
       display: flex;
-      align-items: center;
-      gap: 10px; /* Increased gap */
+      flex-direction: column;
+      gap: 8px;
     }
+
     .dev-setting-row label {
-      min-width: 180px;
-      font-size: 0.9em;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #444;
     }
-     .dev-setting-row small {
-        font-size: 0.8em;
-        color: #ccc;
-     }
-    #connection-status {
-      font-size: 0.9em; /* Slightly larger */
-      color: #bbb; /* Lighter color */
-      margin-top: 8px; /* Increased margin */
-      min-height: 1.2em;
-      padding-left: 5px;
+
+    .dev-setting-row input, .dev-setting-row select {
+      background: #0a0a0a;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 10px;
+      color: #fff;
+      font-size: 0.85rem;
+      font-family: var(--mono-font);
     }
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border-width: 0;
-    }
-    .presets-panel h3 { margin-top: 0; margin-bottom: 10px; }
+
     .preset-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px; /* Increased padding */
-      background: rgba(0,0,0,0.3); /* Slightly more visible */
-      border-radius: 4px; /* Smoother radius */
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 12px;
+      font-size: 0.85rem;
     }
-    .preset-item span { flex-grow: 1; }
-    .preset-item button { margin-left: 8px; font-size: 0.8em; padding: 4px 8px;}
-    .loading-spinner {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-radius: 50%;
-      border-top-color: #fff;
-      animation: spin 1s ease-in-out infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
   `;
 
   @state() private prompts: Map<string, Prompt> = new Map();
@@ -1242,73 +1245,58 @@ Your response MUST be ONLY the JSON object.
       <toast-message></toast-message>
       <div id="top-controls">
         <div id="buttons">
-          <button @click=${this.toggleMidi} class=${classMap({ active: this.showMidi })}>MIDI CCs</button>
-          <button @click=${this.toggleDevSettings} class=${classMap({ active: this.showDevSettings })}>Dev Settings</button>
+          <button @click=${this.toggleMidi} class=${classMap({ active: this.showMidi })}>MIDI</button>
+          <button @click=${this.toggleDevSettings} class=${classMap({ active: this.showDevSettings })}>Settings</button>
           <button @click=${this.togglePresetsPanel} class=${classMap({ active: this.showPresetsPanel })}>Presets</button>
-           <button @click=${this.regenerateBoard}>New Board</button>
           <button @click=${this.toggleRecording} class=${classMap({ recording: this.isRecording })}>
-            ${this.isRecording ? 'Stop Recording' : 'Record Audio'}
+            ${this.isRecording ? 'Stop' : 'Record'}
           </button>
-          ${this.showMidi
-            ? html`
-                <select @focus=${this.updateMidiInputs} @change=${this.onMidiInputChange} .value=${this.activeMidiInputId || ''} aria-label="Select MIDI Input">
-                  ${this.midiInputIds.map(
-                    (id) => html` <option value=${id}>
-                      ${this.midiDispatcher.getDeviceName(id) || id}
-                    </option>`,
-                  )}
-                  ${this.midiInputIds.length === 0 ? html`<option value="" disabled>No MIDI devices found</option>` : ''}
-                </select>
-              `
-            : ''}
         </div>
-        ${this.showDevSettings ? html`
-          <div id="dev-settings-panel">
-            <div class="dev-setting-row">
-              <label for="dev-model-name">Model Name:</label>
-              <input type="text" id="dev-model-name" .value=${this.devModelName} 
-                     @input=${(e: Event) => { this.devModelName = (e.target as HTMLInputElement).value; this._updateDevSettingsChangedStatus(); }}>
-            </div>
-            <div class="dev-setting-row">
-              <label for="dev-buffer-time">Client Buffer Time (s):</label>
-              <input type="number" id="dev-buffer-time" min="0.1" max="10" step="0.1" .value=${this.devClientBufferTime.toString()} 
-                     @input=${(e: Event) => this.devClientBufferTime = parseFloat((e.target as HTMLInputElement).value)}>
-            </div>
-            <div class="dev-setting-row">
-              <label for="dev-sample-rate">AudioContext Sample Rate:</label>
-              <select id="dev-sample-rate"
-                      @change=${(e: Event) => { this.devAudioContextSampleRate = parseInt((e.target as HTMLSelectElement).value); this._updateDevSettingsChangedStatus();}}>
-                  ${AVAILABLE_SAMPLE_RATES.map(rate => html`<option value="${rate}" ?selected=${rate === this.devAudioContextSampleRate}>${rate} Hz</option>`)}
-              </select>
-               <small>Changing requires audio restart.</small>
-            </div>
-             <div class="dev-setting-row">
-                <label for="dev-num-channels">Decoding Channels:</label>
-                <input type="number" id="dev-num-channels" min="1" max="2" step="1" .value=${this.devNumDecodingChannels.toString()} 
-                       @input=${(e: Event) => this.devNumDecodingChannels = parseInt((e.target as HTMLInputElement).value)}>
-                 <small>Usually 1 for mono, 2 for stereo Lyria output.</small>
-            </div>
-            <button @click=${this.applyDevSettings} ?disabled=${!this.devSettingsHaveChanged}>Apply Dev Settings</button>
-          </div>
-        ` : ''}
-         ${this.showPresetsPanel ? html`
-          <div class="presets-panel">
-            <h3>Manage Presets</h3>
-            <div class="dev-setting-row">
-              <input type="text" id="preset-name-input" placeholder="New preset name...">
-              <button @click=${this.savePreset} class="button-like">Save Current</button>
-            </div>
-            ${this.savedPresets.length > 0 ? this.savedPresets.map(preset => html`
-              <div class="preset-item">
-                <span>${preset.name}</span>
-                <button @click=${() => this.loadPreset(preset.name)}>Load</button>
-                <button @click=${() => this.deletePreset(preset.name)} style="background-color: #c0392b;">Delete</button>
-              </div>
-            `) : html`<p>No presets saved yet.</p>`}
-          </div>
-        ` : ''}
+        
         <div id="connection-status" role="status" aria-live="polite">${this.connectionStatusMessage}</div>
       </div>
+
+      ${this.showDevSettings ? html`
+        <div id="dev-settings-panel">
+          <div class="dev-setting-row">
+            <label for="dev-model-name">Model Name:</label>
+            <input type="text" id="dev-model-name" .value=${this.devModelName} 
+                   @input=${(e: Event) => { this.devModelName = (e.target as HTMLInputElement).value; this._updateDevSettingsChangedStatus(); }}>
+          </div>
+          <div class="dev-setting-row">
+            <label for="dev-buffer-time">Client Buffer Time (s):</label>
+            <input type="number" id="dev-buffer-time" min="0.1" max="10" step="0.1" .value=${this.devClientBufferTime.toString()} 
+                   @input=${(e: Event) => this.devClientBufferTime = parseFloat((e.target as HTMLInputElement).value)}>
+          </div>
+          <div class="dev-setting-row">
+            <label for="dev-sample-rate">AudioContext Sample Rate:</label>
+            <select id="dev-sample-rate"
+                    @change=${(e: Event) => { this.devAudioContextSampleRate = parseInt((e.target as HTMLSelectElement).value); this._updateDevSettingsChangedStatus();}}>
+                ${AVAILABLE_SAMPLE_RATES.map(rate => html`<option value="${rate}" ?selected=${rate === this.devAudioContextSampleRate}>${rate} Hz</option>`)}
+            </select>
+          </div>
+          <button @click=${this.applyDevSettings} ?disabled=${!this.devSettingsHaveChanged}>Apply Changes</button>
+        </div>
+      ` : ''}
+
+      ${this.showPresetsPanel ? html`
+        <div class="presets-panel">
+          <h3>Presets</h3>
+          <div class="dev-setting-row">
+            <input type="text" id="preset-name-input" placeholder="Name...">
+            <button @click=${this.savePreset}>Save</button>
+          </div>
+          ${this.savedPresets.length > 0 ? this.savedPresets.map(preset => html`
+            <div class="preset-item">
+              <span>${preset.name}</span>
+              <div style="display: flex; gap: 4px;">
+                <button @click=${() => this.loadPreset(preset.name)}>Load</button>
+                <button @click=${() => this.deletePreset(preset.name)} style="color: #ff4444; border-color: #ff4444;">Del</button>
+              </div>
+            </div>
+          `) : html`<p style="color: #444; font-size: 0.8rem;">No presets saved yet.</p>`}
+        </div>
+      ` : ''}
 
       <div id="knob-groups-container">
         ${this.displayKnobGroups.map(group => html`
@@ -1316,17 +1304,10 @@ Your response MUST be ONLY the JSON object.
             <h3 id="${group.groupName.replace(/\s+/g, '-').toLowerCase()}-title" class="knob-group-title">${group.groupName}</h3>
             <div class="knobs-container">
               ${group.knobs.map(knobConfig => {
-                // Find the full Prompt object from this.prompts using the ccCounter
-                // This assumes applyKnobConfiguration assigned CCs in the same iteration order
                 const promptDetails = getPromptByCC(ccCounter);
-                ccCounter++; // Increment for the next knob overall
+                ccCounter++;
                 
-                if (!promptDetails) {
-                  // This case should ideally not be hit if TOTAL_KNOBS are consistently generated
-                  // and applyKnobConfiguration correctly maps all of them.
-                  console.warn(`Could not find prompt details for CC ${ccCounter -1}, knob:`, knobConfig);
-                  return html`<!-- Error: Prompt data missing for ${knobConfig.text} -->`;
-                }
+                if (!promptDetails) return html``;
                 return html`
                   <prompt-controller
                     .promptId=${promptDetails.promptId}
@@ -1361,18 +1342,19 @@ Your response MUST be ONLY the JSON object.
           <textarea id="effects-prompt" 
                     .value=${this.effectsPrompt} 
                     @input=${(e: Event) => this.effectsPrompt = (e.target as HTMLTextAreaElement).value}
-                    placeholder="Describe the sound environment... e.g., 'in a large cathedral' or 'gritty lo-fi delay'"
+                    placeholder="Describe the sound environment..."
           ></textarea>
-          <div class="effects-row">
-            <button @click=${this.applySmartEffects} ?disabled=${this.isEffectsLoading}>
-              ${this.isEffectsLoading ? html`<div class="loading-spinner"></div>` : ''}
-              Apply Effects
-            </button>
-             <label class="toggle-switch">
+          <div class="effects-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <label class="toggle-switch">
                 <input type="checkbox" ?checked=${this.isEffectsChainActive} @change=${() => this.toggleEffectsChain()}>
                 <span class="slider"></span>
-            </label>
-            <span>Bypass</span>
+              </label>
+              <span style="font-family: var(--mono-font); font-size: 0.7rem; color: #666;">BYPASS</span>
+            </div>
+            <button @click=${this.applySmartEffects} ?disabled=${this.isEffectsLoading || !this.isEffectsChainActive} style="width: auto;">
+              ${this.isEffectsLoading ? html`<div class="loading-spinner"></div>` : 'Apply'}
+            </button>
           </div>
         </div>
       </div>
@@ -1384,7 +1366,6 @@ Your response MUST be ONLY the JSON object.
         aria-pressed=${this.playbackState === 'playing' || this.playbackState === 'loading'}
         role="button">
       </play-pause-button>
-      <p class="sr-only">Audio level: ${Math.round(this.audioLevel * 100)}%</p>
     `;
   }
 }

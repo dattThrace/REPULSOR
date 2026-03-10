@@ -7,11 +7,11 @@ import { css, html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
 import type { PlaybackState, Prompt } from '../types';
 
-const MAX_WEIGHT_VALUE = 2.0; // Max value for Y-axis (prompt weight)
-const GRID_COLOR = 'rgba(255, 255, 255, 0.1)';
-const AXIS_LABEL_COLOR = 'rgba(255, 255, 255, 0.5)';
-const OVERLAY_TEXT_COLOR = 'rgba(255, 255, 255, 0.7)';
-const FONT_SIZE = 10; // For axis labels
+const MAX_WEIGHT_VALUE = 2.0;
+const GRID_COLOR = 'rgba(255, 255, 255, 0.05)';
+const AXIS_LABEL_COLOR = 'rgba(255, 255, 255, 0.3)';
+const OVERLAY_TEXT_COLOR = 'rgba(255, 255, 255, 0.5)';
+const FONT_SIZE = 9;
 
 @customElement('weight-history-graph')
 export class WeightHistoryGraph extends LitElement {
@@ -166,6 +166,7 @@ export class WeightHistoryGraph extends LitElement {
       this.ctx.moveTo(0, y);
       this.ctx.lineTo(width, y);
       this.ctx.stroke();
+      this.ctx.font = `${FONT_SIZE}px "JetBrains Mono", monospace`;
       this.ctx.fillText(val.toFixed(1), 2, y - 2 > FONT_SIZE ? y - 2 : y + FONT_SIZE);
     });
 
@@ -177,7 +178,8 @@ export class WeightHistoryGraph extends LitElement {
       this.ctx.lineTo(x, height);
       this.ctx.stroke();
       const timeLabelVal = ((numTimeIntervals - i) * (this.historyDurationMs / 1000 / numTimeIntervals));
-      const timeLabel = timeLabelVal > 0 ? `-${timeLabelVal.toFixed(0)}s` : 'Now';
+      const timeLabel = timeLabelVal > 0 ? `-${timeLabelVal.toFixed(0)}s` : 'NOW';
+      this.ctx.font = `${FONT_SIZE}px "JetBrains Mono", monospace`;
       const textMetrics = this.ctx.measureText(timeLabel);
       const textWidth = textMetrics.width;
       let textX = x - textWidth / 2;
@@ -218,16 +220,16 @@ export class WeightHistoryGraph extends LitElement {
 
     // --- Draw Overlay if not active ---
     if (!this.active) {
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
         this.ctx.fillRect(0, 0, width, height);
-        this.ctx.font = `bold ${Math.min(24, width/10)}px sans-serif`;
+        this.ctx.font = `bold ${Math.min(14, width/20)}px "JetBrains Mono", monospace`;
         this.ctx.fillStyle = OVERLAY_TEXT_COLOR;
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
         const overlayText = this.playbackStateForOverlay.toUpperCase();
         this.ctx.fillText(overlayText, width / 2, height / 2);
-        this.ctx.textAlign = 'left'; // Reset
-        this.ctx.textBaseline = 'alphabetic'; // Reset
+        this.ctx.textAlign = 'left'; 
+        this.ctx.textBaseline = 'alphabetic'; 
     }
   }
 

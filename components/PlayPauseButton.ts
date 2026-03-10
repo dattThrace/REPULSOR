@@ -20,12 +20,16 @@ export class PlayPauseButton extends LitElement {
       pointer-events: none;
     }
     :host(:hover) svg {
-      transform: scale(1.2);
+      transform: scale(1.05);
     }
     svg {
       width: 100%;
       height: 100%;
-      transition: transform 0.5s cubic-bezier(0.25, 1.56, 0.32, 0.99);
+      transition: all 0.3s ease;
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.05));
+    }
+    :host([playbackState="playing"]) svg {
+      filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.1));
     }
     .hitbox {
       pointer-events: all;
@@ -63,16 +67,14 @@ export class PlayPauseButton extends LitElement {
         width="96"
         height="96"
         rx="48"
-        fill="black"
-        fill-opacity="0.05" />
+        fill="#111" />
       <rect
         x="23.5"
         y="7.5"
         width="93"
         height="93"
         rx="46.5"
-        stroke="black"
-        stroke-opacity="0.3"
+        stroke="rgba(255,255,255,0.05)"
         stroke-width="3" />
       <g filter="url(#filter0_ddi_1048_7373)">
         <rect
@@ -81,8 +83,7 @@ export class PlayPauseButton extends LitElement {
           width="90"
           height="90"
           rx="45"
-          fill="white"
-          fill-opacity="0.05"
+          fill="#0a0a0a"
           shape-rendering="crispEdges" />
       </g>
       ${this.renderIcon()}

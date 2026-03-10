@@ -125,6 +125,8 @@ export class WeightKnob extends LitElement {
       display: this.value > 0 ? 'block' : 'none',
       background: this.color,
       transform: `scale(${scale})`,
+      boxShadow: `0 0 ${20 * scale}px ${this.color}`,
+      opacity: 0.4 + (this.audioLevel * 0.6),
     });
 
     return html`
@@ -137,7 +139,7 @@ export class WeightKnob extends LitElement {
         @pointerdown=${this.handlePointerDown}
         @wheel=${this.handleWheel}>
         <g style=${dotStyle}>
-          <circle cx="14" cy="0" r="2" fill="#000" />
+          <circle cx="14" cy="0" r="2" fill="#fff" />
         </g>
         <path
           d=${this.describeArc(40, 40, minRot, maxRot, 34.5)}
@@ -270,8 +272,8 @@ export class WeightKnob extends LitElement {
             x2="40"
             y2="60.3822"
             gradientUnits="userSpaceOnUse">
-            <stop stop-color="white" />
-            <stop offset="1" stop-color="#F2F2F2" />
+            <stop stop-color="#222" />
+            <stop offset="1" stop-color="#050505" />
           </linearGradient>
           <linearGradient
             id="f6"
@@ -280,8 +282,8 @@ export class WeightKnob extends LitElement {
             x2="40"
             y2="57.7148"
             gradientUnits="userSpaceOnUse">
-            <stop stop-color="#EBEBEB" />
-            <stop offset="1" stop-color="white" />
+            <stop stop-color="#333" />
+            <stop offset="1" stop-color="#111" />
           </linearGradient>
         </defs>
       </svg>`

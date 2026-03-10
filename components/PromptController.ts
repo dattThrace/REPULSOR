@@ -20,65 +20,65 @@ export class PromptController extends LitElement {
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      gap: 12px;
     }
     weight-knob {
-      width: 70%;
+      width: 80%;
       flex-shrink: 0;
     }
     #midi {
-      font-family: monospace;
+      font-family: var(--mono-font);
       text-align: center;
-      font-size: 1.5vmin;
-      border: 0.2vmin solid #fff;
-      border-radius: 0.5vmin;
-      padding: 2px 5px;
-      color: #fff;
-      background: #0006;
+      font-size: 0.6rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      padding: 2px 6px;
+      color: #666;
+      background: rgba(255, 255, 255, 0.02);
       cursor: pointer;
       visibility: hidden;
       user-select: none;
-      margin-top: 0.75vmin;
-      .learn-mode & {
-        color: orange;
-        border-color: orange;
-      }
-      .show-cc & {
-        visibility: visible;
-      }
+      transition: all 0.2s ease;
+    }
+    #midi:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+    }
+    .learn-mode #midi {
+      color: #ffcc00;
+      border-color: #ffcc00;
+      background: rgba(255, 204, 0, 0.1);
+    }
+    .show-cc #midi {
+      visibility: visible;
     }
     #text {
-      font-family: 'Google Sans', sans-serif;
-      font-weight: 500;
-      font-size: 1.8vmin;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
       max-width: 100%;
-      min-width: 2vmin;
-      padding: 0.1em 0.3em;
-      margin-top: 0.5vmin;
+      min-width: 40px;
+      padding: 4px 8px;
       flex-shrink: 0;
-      border-radius: 0.25vmin;
+      border-radius: 8px;
       text-align: center;
       white-space: wrap;
       word-break: break-word;
       overflow: hidden;
-      border: none;
+      border: 1px solid transparent;
       outline: none;
       -webkit-font-smoothing: antialiased;
-      background: #000;
+      background: transparent;
       color: #fff;
-      &:not(:focus) {
-        text-overflow: ellipsis;
-      }
+      transition: all 0.2s ease;
+    }
+    #text:focus {
+      background: #1a1a1a;
+      border-color: rgba(255, 255, 255, 0.1);
     }
     :host([filtered=true]) #text {
-      background: #da2000;
-    }
-    @media only screen and (max-width: 600px) {
-      #text {
-        font-size: 2.3vmin;
-      }
-      weight-knob {
-        width: 60%;
-      }
+      color: #ff4444;
+      text-decoration: line-through;
     }
   `;
 

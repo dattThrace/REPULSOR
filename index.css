@@ -1,6 +1,22 @@
+@import "tailwindcss";
+
+:root {
+  --bg-color: #0a0a0a;
+  --card-bg: #151619;
+  --text-primary: #FFFFFF;
+  --text-secondary: #8E9299;
+  --accent-color: #4CAF50;
+  --mono-font: 'JetBrains Mono', 'Roboto Mono', monospace;
+}
+
 html, body {
   height: 100%;
   margin: 0;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 body {
   overflow-y: auto; /* Allow main page scroll */

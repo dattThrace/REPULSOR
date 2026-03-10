@@ -62,131 +62,184 @@ export class InitialSetupScreen extends LitElement {
       justify-content: center;
       height: 100%;
       width: 100%;
-      background-color: #1a1a1a;
+      background-color: #050505;
       color: #fff;
       padding: 20px;
       box-sizing: border-box;
       text-align: center;
       overflow-y: auto;
+      font-family: 'Inter', sans-serif;
     }
     .setup-container {
-      background-color: #282828;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      background-color: #111;
+      padding: 40px;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
       width: 100%;
       max-width: 600px;
+      animation: fadeIn 0.6s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     h2 {
       margin-top: 0;
-      color: #4CAF50; /* Accent color */
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(to right, #fff, #888);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    p {
+      color: #888;
+      margin-bottom: 32px;
+      font-size: 1rem;
     }
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 24px;
       text-align: left;
     }
     label {
       display: block;
       margin-bottom: 8px;
-      font-weight: bold;
-      font-size: 0.95em;
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #666;
     }
-    input[type="text"],
     textarea,
-    input[type="number"],
+    input[type="text"],
     input[type="range"] {
       width: 100%;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #444;
-      background-color: #333;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid #222;
+      background-color: #0a0a0a;
       color: #fff;
       box-sizing: border-box;
-      font-size: 1em;
-      margin-bottom: 5px;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    textarea:focus,
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #4CAF50;
+      background-color: #0f0f0f;
+      box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.1);
     }
     textarea {
-      min-height: 80px;
-      resize: vertical;
-    }
-    input[type="range"] {
-      padding: 0; /* Override default padding for range */
+      min-height: 100px;
+      resize: none;
     }
     .specific-knob-input {
       display: flex;
       align-items: center;
-      margin-bottom: 8px;
-      gap: 8px;
+      margin-bottom: 12px;
+      gap: 12px;
     }
     .specific-knob-input input[type="text"] {
       flex-grow: 1;
-      margin-bottom: 0;
     }
     button {
-      padding: 12px 25px;
-      border-radius: 6px;
+      width: 100%;
+      padding: 16px;
+      border-radius: 12px;
       border: none;
-      background-color: #4CAF50; /* Green accent */
-      color: white;
-      font-size: 1.1em;
-      font-weight: bold;
+      background-color: #fff;
+      color: #000;
+      font-size: 1rem;
+      font-weight: 700;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      transition: all 0.2s ease;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 12px;
+      margin-top: 16px;
     }
     button:hover:not(:disabled) {
-      background-color: #45a049;
+      background-color: #eee;
+      transform: translateY(-1px);
+    }
+    button:active:not(:disabled) {
+      transform: translateY(0);
     }
     button:disabled {
-      background-color: #555;
+      background-color: #222;
+      color: #444;
       cursor: not-allowed;
     }
     .add-knob-btn {
-      background-color: #007bff; /* Blue for add */
-      font-size: 0.9em;
-      padding: 8px 15px;
+      background-color: transparent;
+      color: #4CAF50;
+      border: 1px dashed #4CAF50;
+      font-size: 0.9rem;
+      padding: 10px;
+      margin-top: 0;
     }
     .add-knob-btn:hover:not(:disabled) {
-      background-color: #0069d9;
+      background-color: rgba(76, 175, 80, 0.05);
     }
     .remove-knob-btn {
-      background-color: #dc3545; /* Red for remove */
-      padding: 8px 12px; /* Smaller padding */
-      font-size: 0.9em;
+      background-color: #1a1a1a;
+      color: #666;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      margin: 0;
+      border-radius: 12px;
+      font-size: 1.2rem;
     }
-    .remove-knob-btn:hover:not(:disabled) {
-      background-color: #c82333;
+    .remove-knob-btn:hover {
+      color: #ff4444;
+      background-color: #222;
     }
     .loading-spinner {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #4CAF50;
+      border: 3px solid rgba(0,0,0,0.1);
+      border-top: 3px solid #000;
       border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      animation: spin 1s linear infinite;
+      width: 20px;
+      height: 20px;
+      animation: spin 0.8s linear infinite;
     }
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
     .creativity-value {
-      display: inline-block;
-      min-width: 30px;
-      text-align: right;
-      font-weight: normal;
-      font-size: 0.9em;
-      margin-left: 10px;
+      float: right;
+      color: #4CAF50;
+      font-family: var(--mono-font);
     }
-    #toast-container { /* Ensure toast is usable here */
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 1000;
-     }
+    small {
+      display: block;
+      margin-top: 8px;
+      color: #444;
+      font-size: 0.75rem;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      height: 6px;
+      background: #222;
+      border-radius: 3px;
+      padding: 0;
+      margin: 16px 0;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: #4CAF50;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(76, 175, 80, 0.4);
+    }
   `;
 
   @state() private musicStyle = "90s boom-bap hip hop with jazzy samples and a laid-back groove";
