@@ -1,20 +1,30 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Prompt DJ MIDI
 
-# Run and deploy your AI Studio app
+A premium, mobile-optimized AI-powered DJ interface.
 
-This contains everything you need to run your app locally.
+## Deployment to Vercel
 
-View your app in AI Studio: https://ai.studio/apps/cdc94197-59a6-4211-a28c-344ce4a9874d
+This project is ready to be deployed to Vercel as a Single Page Application (SPA).
 
-## Run Locally
+### Steps to Deploy
 
-**Prerequisites:**  Node.js
+1. **Push to GitHub**: Push your code to a GitHub repository.
+2. **Import to Vercel**: Go to [Vercel](https://vercel.com) and import your repository.
+3. **Configure Environment Variables**:
+   - In the Vercel project settings, add an environment variable named `GEMINI_API_KEY`.
+   - You can get your Gemini API key from the [Google AI Studio](https://aistudio.google.com/app/apikey).
+4. **Deploy**: Vercel will automatically detect the Vite build settings and deploy your app.
 
+### Build Configuration
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+- **Framework Preset**: Vite
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Install Command**: `npm install`
+
+## Features
+
+- **AI-Powered Prompt Morphing**: Use the Gemini API to morph between different musical prompts.
+- **MIDI Support**: Connect your MIDI controller to map physical knobs to prompt weights.
+- **Mobile Optimized**: A premium, hardware-inspired UI that works beautifully on mobile and desktop.
+- **Real-time Visualization**: Track your prompt weights over time with a high-performance canvas graph.
