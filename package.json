@@ -4,14 +4,18 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "tsx server.ts",
     "build": "vite build",
     "lint": "tsc --noEmit",
     "preview": "vite preview"
   },
   "dependencies": {
     "@google/genai": "^1.0.0",
-    "lit": "^3.3.0"
+    "better-sqlite3": "^12.6.2",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "lit": "^3.3.0",
+    "tsx": "^4.21.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.1",

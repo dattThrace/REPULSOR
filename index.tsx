@@ -22,7 +22,6 @@ import { ToastMessage } from './components/ToastMessage';
 import './components/InitialSetupScreen'; 
 import type { KnobGroup, InitialKnobConfig } from './components/InitialSetupScreen'; 
 import { WeightHistoryGraph } from './components/WeightHistoryGraph';
-import { generateImpulseResponse } from './utils/effects.ts';
 
 import type { Prompt, PlaybackState } from './types';
 
@@ -45,19 +44,12 @@ const TOTAL_KNOBS = 16;
 const HISTORY_DURATION_MS = 15000; // 15 seconds
 const HISTORY_SAMPLE_INTERVAL_MS = 250; // Sample 4 times per second
 
-type ImpulseResponseMap = Map<'cathedral' | 'small_room' | 'cave' | 'none', AudioBuffer | null>;
-
-interface EffectParameters {
-  reverb: { impulseResponse: 'cathedral' | 'small_room' | 'cave' | 'none' };
-  delay: { enabled: boolean; time: number; feedback: number; };
-  filter: { enabled: boolean; type: 'lowpass' | 'highpass' | 'bandpass'; frequency: number; q: number; };
-}
-
 /** The main application component. */
 @customElement('prompt-dj-midi')
 class PromptDjMidi extends LitElement {
   static override styles = css`
     :host {
+      --mono-font: 'JetBrains Mono', 'Roboto Mono', monospace;
       height: 100%;
       display: flex;
       flex-direction: column;
@@ -125,89 +117,6 @@ class PromptDjMidi extends LitElement {
       border-radius: 24px;
       border: 1px solid rgba(255, 255, 255, 0.05);
       overflow: hidden;
-    }
-
-    #effects-panel {
-      width: 95%;
-      max-width: 1000px;
-      margin-top: 32px;
-      padding: 32px;
-      background-color: #111;
-      border-radius: 24px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    #effects-panel h2 {
-      margin-top: 0;
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #444;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      padding-bottom: 16px;
-      margin-bottom: 24px;
-    }
-
-    #effects-prompt {
-      width: 100%;
-      background: #0a0a0a;
-      color: #fff;
-      border: 1px solid #222;
-      border-radius: 12px;
-      padding: 16px;
-      resize: none;
-      min-height: 80px;
-      font-family: inherit;
-      font-size: 0.9rem;
-      transition: all 0.2s ease;
-    }
-
-    #effects-prompt:focus {
-      outline: none;
-      border-color: #4CAF50;
-      background: #0f0f0f;
-    }
-
-    .toggle-switch {
-      position: relative;
-      display: inline-block;
-      width: 44px;
-      height: 24px;
-    }
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #222;
-      transition: .4s;
-      border-radius: 24px;
-    }
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 16px;
-      width: 16px;
-      left: 4px;
-      bottom: 4px;
-      background-color: #666;
-      transition: .4s;
-      border-radius: 50%;
-    }
-    input:checked + .slider {
-      background-color: #4CAF50;
-    }
-    input:checked + .slider:before {
-      transform: translateX(20px);
-      background-color: #fff;
     }
 
     #top-controls {
@@ -279,31 +188,7 @@ class PromptDjMidi extends LitElement {
       letter-spacing: 0.05em;
     }
 
-    play-pause-button {
-      position: fixed;
-      bottom: 40px;
-      right: 40px;
-      width: 80px;
-      height: 80px;
-      z-index: 200;
-    }
-
-    .loading-spinner {
-      width: 12px;
-      height: 12px;
-      border: 2px solid rgba(255,255,255,0.1);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
     #dev-settings-panel, .presets-panel {
-      position: fixed;
-      top: 80px;
-      right: 24px;
-      width: 320px;
-      padding: 24px;
-      background: rgba(15, 15, 15, 0.95);
       backdrop-filter: blur(20px);
       border-radius: 24px;
       border: 1px solid rgba(255, 255, 255, 0.05);
@@ -344,6 +229,31 @@ class PromptDjMidi extends LitElement {
       font-family: var(--mono-font);
     }
 
+    .dev-setting-row input[type="range"] {
+      padding: 0;
+      height: 4px;
+      background: #222;
+      border: none;
+      border-radius: 2px;
+      appearance: none;
+      margin: 10px 0;
+    }
+    .dev-setting-row input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid #000;
+    }
+    .dev-setting-row span {
+      font-family: var(--mono-font);
+      font-size: 0.75rem;
+      color: #666;
+      text-align: right;
+    }
+
     .preset-item {
       display: flex;
       justify-content: space-between;
@@ -370,19 +280,6 @@ class PromptDjMidi extends LitElement {
   private audioContext!: AudioContext | null; // Allow null
   private outputNode!: GainNode; 
   private nextStartTime = 0;
-
-  // Effects Chain
-  private effectsInputNode!: GainNode;
-  private convolverNode!: ConvolverNode;
-  private delayNode!: DelayNode;
-  private feedbackNode!: GainNode;
-  private filterNode!: BiquadFilterNode;
-  private effectsBypassNode!: GainNode;
-  private impulseResponses!: ImpulseResponseMap;
-  @state() private isEffectsChainActive = false;
-  @state() private isEffectsLoading = false;
-  @state() private effectsPrompt = 'A subtle echo in a small, warm room.';
-
 
   @state() private showMidi = false;
   @state() private audioLevel = 0;
@@ -412,8 +309,12 @@ class PromptDjMidi extends LitElement {
   @state() private promptWeightHistory: Map<string, Array<{ time: number, weight: number }>> = new Map();
   private historyIntervalId: number | null = null;
 
+  @state() private mixingStrategy: 'linear' | 'power' | 'softmax' = 'linear';
+  @state() private mixingTemperature = 1.0;
+  @state() private mixingPower = 2.0;
+
   @state() private showPresetsPanel = false;
-  @state() private savedPresets: Array<{name: string, knobGroups: KnobGroup[]}> = [];
+  @state() private savedPresets: Array<{id?: number, name: string, knobGroups: KnobGroup[], mixing?: any}> = [];
   @query('#preset-name-input') private presetNameInput!: HTMLInputElement;
 
   @state() private isRecording = false;
@@ -425,7 +326,7 @@ class PromptDjMidi extends LitElement {
     this.midiDispatcher = new MidiDispatcher();
     this.updateAudioLevel = this.updateAudioLevel.bind(this);
     this.samplePromptWeightsForHistory = this.samplePromptWeightsForHistory.bind(this);
-    this.loadPresetsFromLocalStorage();
+    this.loadPresets();
   }
 
   private _updateDevSettingsChangedStatus() {
@@ -469,36 +370,9 @@ class PromptDjMidi extends LitElement {
       this.audioAnalyser = new AudioAnalyser(this.audioContext);
       console.log(`[Lyria Debug] AudioContext initialized. State: ${this.audioContext.state}`);
       
-      // --- Setup Effects Chain ---
-      this.effectsInputNode = this.audioContext.createGain();
-      this.convolverNode = this.audioContext.createConvolver();
-      this.delayNode = this.audioContext.createDelay(2.0); // Max 2s delay
-      this.feedbackNode = this.audioContext.createGain();
-      this.filterNode = this.audioContext.createBiquadFilter();
-      this.effectsBypassNode = this.audioContext.createGain();
-
-      // Create connections
-      // WET Path: input -> filter -> delay -> convolver -> bypass
-      this.effectsInputNode.connect(this.filterNode);
-      this.filterNode.connect(this.delayNode);
-      this.delayNode.connect(this.feedbackNode);
-      this.feedbackNode.connect(this.delayNode); // Feedback loop
-      this.delayNode.connect(this.convolverNode);
-      this.convolverNode.connect(this.effectsBypassNode);
-
-      // Main connection point: bypass node -> analyser -> destination
-      this.effectsBypassNode.connect(this.audioAnalyser.node);
+      // Connect output node directly to analyser
+      this.outputNode.connect(this.audioAnalyser.node);
       this.audioAnalyser.node.connect(this.audioContext.destination);
-
-      // Pre-generate and cache impulse responses
-      this.impulseResponses = new Map();
-      this.impulseResponses.set('cathedral', generateImpulseResponse('cathedral', this.audioContext));
-      this.impulseResponses.set('small_room', generateImpulseResponse('small_room', this.audioContext));
-      this.impulseResponses.set('cave', generateImpulseResponse('cave', this.audioContext));
-      this.impulseResponses.set('none', generateImpulseResponse('none', this.audioContext));
-
-      // Set initial state of effects chain (bypassed)
-      this.toggleEffectsChain(this.isEffectsChainActive);
       
       this.nextStartTime = 0;
       this.connectionError = false; 
@@ -764,10 +638,28 @@ class PromptDjMidi extends LitElement {
         return;
     }
 
-    const promptsToSend = Array.from(this.prompts.values()).map(p => ({
+    let promptsToSend = Array.from(this.prompts.values()).map(p => ({
       text: p.text,
       weight: p.weight,
     }));
+
+    // Apply Mixing Strategy
+    if (this.mixingStrategy === 'power') {
+      const weights = promptsToSend.map(p => Math.pow(p.weight, this.mixingPower));
+      const sum = weights.reduce((a, b) => a + b, 0);
+      promptsToSend = promptsToSend.map((p, i) => ({
+        text: p.text,
+        weight: sum > 0 ? weights[i] / sum : 0
+      }));
+    } else if (this.mixingStrategy === 'softmax') {
+      // Softmax normalization
+      const exps = promptsToSend.map(p => Math.exp(p.weight / this.mixingTemperature));
+      const sum = exps.reduce((a, b) => a + b, 0);
+      promptsToSend = promptsToSend.map((p, i) => ({
+        text: p.text,
+        weight: sum > 0 ? exps[i] / sum : 0
+      }));
+    }
 
     if (promptsToSend.length === 0) {
       console.error("setSessionPrompts: promptsToSend array is empty. Aborting Lyria API call. this.prompts.size:", this.prompts.size);
@@ -980,26 +872,42 @@ class PromptDjMidi extends LitElement {
     // so the state should be up-to-date.
   }
   
-  private savePreset() {
+  private async savePreset() {
     const name = this.presetNameInput.value.trim();
     if (!name) {
       this.toastMessage?.show?.("Please enter a name for the preset.");
       return;
     }
-    if (this.savedPresets.find(p => p.name === name)) {
-      if (!confirm(`A preset named "${name}" already exists. Overwrite it?`)) {
-        return;
-      }
-      this.savedPresets = this.savedPresets.filter(p => p.name !== name);
-    }
 
     // Save the structured displayKnobGroups
     const currentKnobGroupsToSave = JSON.parse(JSON.stringify(this.displayKnobGroups));
 
-    this.savedPresets.push({ name, knobGroups: currentKnobGroupsToSave });
-    this.savePresetsToLocalStorage();
-    this.toastMessage?.show?.(`Preset "${name}" saved.`);
-    this.presetNameInput.value = ""; 
+    try {
+      const response = await fetch('/api/presets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          name, 
+          config: { 
+            knobGroups: currentKnobGroupsToSave,
+            mixing: {
+              strategy: this.mixingStrategy,
+              temperature: this.mixingTemperature,
+              power: this.mixingPower
+            }
+          } 
+        })
+      });
+      if (response.ok) {
+        const newPreset = await response.json();
+        this.savedPresets = [newPreset, ...this.savedPresets];
+        this.toastMessage?.show?.(`Preset "${name}" saved to database.`);
+        this.presetNameInput.value = ""; 
+      }
+    } catch (e) {
+      console.error("Error saving preset:", e);
+      this.toastMessage?.show?.("Failed to save preset to database.");
+    }
   }
 
   private loadPreset(presetName: string) {
@@ -1009,6 +917,13 @@ class PromptDjMidi extends LitElement {
       this.displayKnobGroups = newKnobGroups; // Update display structure
       this.applyKnobConfiguration(newKnobGroups); // Process into flat prompts
       
+      // Load mixing settings if they exist in the preset
+      if (preset.mixing) {
+        this.mixingStrategy = preset.mixing.strategy || 'linear';
+        this.mixingTemperature = preset.mixing.temperature || 1.0;
+        this.mixingPower = preset.mixing.power || 2.0;
+      }
+      
       if (this.session && this.serverSetupComplete && (this.playbackState === 'playing' || this.playbackState === 'paused')) {
           this.setSessionPrompts();
       }
@@ -1017,32 +932,36 @@ class PromptDjMidi extends LitElement {
     }
   }
 
-  private deletePreset(presetName: string) {
+  private async deletePreset(id: number, presetName: string) {
     if (confirm(`Are you sure you want to delete the preset "${presetName}"?`)) {
-      this.savedPresets = this.savedPresets.filter(p => p.name !== presetName);
-      this.savePresetsToLocalStorage();
-      this.toastMessage?.show?.(`Preset "${presetName}" deleted.`);
+      try {
+        const response = await fetch(`/api/presets/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+          this.savedPresets = this.savedPresets.filter(p => p.id !== id);
+          this.toastMessage?.show?.(`Preset "${presetName}" deleted.`);
+        }
+      } catch (e) {
+        console.error("Error deleting preset:", e);
+        this.toastMessage?.show?.("Failed to delete preset.");
+      }
     }
   }
 
-  private savePresetsToLocalStorage() {
+  private async loadPresets() {
     try {
-      localStorage.setItem('promptDjPresets', JSON.stringify(this.savedPresets));
-    } catch (e) {
-      console.error("Error saving presets to LocalStorage:", e);
-      this.toastMessage?.show?.("Could not save presets to local storage.");
-    }
-  }
-
-  private loadPresetsFromLocalStorage() {
-    try {
-      const storedPresets = localStorage.getItem('promptDjPresets');
-      if (storedPresets) {
-        this.savedPresets = JSON.parse(storedPresets);
+      const response = await fetch('/api/presets');
+      if (response.ok) {
+        const data = await response.json();
+        this.savedPresets = data.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          knobGroups: p.config.knobGroups,
+          mixing: p.config.mixing
+        }));
       }
     } catch (e) {
-      console.error("Error loading presets from LocalStorage:", e);
-      this.savedPresets = []; 
+      console.error("Error loading presets:", e);
+      this.toastMessage?.show?.("Failed to load presets from database.");
     }
   }
 
@@ -1109,10 +1028,6 @@ class PromptDjMidi extends LitElement {
                                 "Your current layout and any unsaved recordings will be lost (unless saved as a preset).";
 
     if (confirm(confirmationMessage)) {
-      // Set flags that affect stop() or initAudioSystem() *before* calling it.
-      // This ensures the new audio system is initialized in a clean, bypassed state.
-      this.isEffectsChainActive = false;
-
       await this.stop();
   
       // Explicitly reset all other state related to the board for a clean slate.
@@ -1121,10 +1036,6 @@ class PromptDjMidi extends LitElement {
       this.promptWeightHistory = new Map();
       this.filteredPrompts = new Set<string>();
       
-      // Reset effects UI state to default
-      this.effectsPrompt = 'A subtle echo in a small, warm room.';
-      this.isEffectsLoading = false;
-
       // Hide UI panels for a cleaner setup screen experience
       this.showMidi = false;
       this.showDevSettings = false;
@@ -1137,111 +1048,6 @@ class PromptDjMidi extends LitElement {
     }
   }
   
-  private toggleEffectsChain(forceState?: boolean) {
-    this.isEffectsChainActive = forceState ?? !this.isEffectsChainActive;
-    if (!this.audioContext || !this.outputNode || !this.effectsInputNode || !this.effectsBypassNode) return;
-
-    // Disconnect outputNode from wherever it's currently connected
-    this.outputNode.disconnect();
-    
-    if (this.isEffectsChainActive) {
-        // Connect WET path
-        this.outputNode.connect(this.effectsInputNode);
-        this.toastMessage?.show?.("Master effects enabled.");
-    } else {
-        // Connect DRY path (bypass effects)
-        this.outputNode.connect(this.effectsBypassNode);
-        this.toastMessage?.show?.("Master effects bypassed.");
-    }
-  }
-  
-  private applyEffectParameters(params: EffectParameters) {
-    if (!this.audioContext) return;
-    const now = this.audioContext.currentTime;
-
-    // Reverb
-    const irBuffer = this.impulseResponses.get(params.reverb.impulseResponse);
-    this.convolverNode.buffer = irBuffer || null;
-    
-    // Delay
-    this.delayNode.delayTime.setTargetAtTime(params.delay.enabled ? params.delay.time : 0, now, 0.01);
-    this.feedbackNode.gain.setTargetAtTime(params.delay.enabled ? params.delay.feedback : 0, now, 0.01);
-
-    // Filter
-    if (params.filter.enabled) {
-        this.filterNode.type = params.filter.type;
-        this.filterNode.frequency.setTargetAtTime(params.filter.frequency, now, 0.01);
-        this.filterNode.Q.setTargetAtTime(params.filter.q, now, 0.01);
-    } else {
-        // To disable the filter, we effectively turn it into a passthrough.
-        this.filterNode.type = 'allpass';
-        this.filterNode.frequency.setTargetAtTime(this.audioContext.sampleRate / 2, now, 0.01);
-        this.filterNode.Q.setTargetAtTime(1, now, 0.01);
-    }
-  }
-  
-  private async applySmartEffects() {
-    this.isEffectsLoading = true;
-    const systemInstruction = `You are an expert audio engineer translating natural language into parameters for a Web Audio API effects chain. Your output MUST be a single, valid JSON object and nothing else. Do not wrap it in markdown.
-The user will describe a sound environment or effect. You must translate this into settings for the following three effects modules: reverb, delay, and filter.
-The JSON object must have three top-level keys: "reverb", "delay", and "filter".
-
-1.  **Reverb Module (ConvolverNode):**
-    - The "reverb" key's value is an object with one key: "impulseResponse".
-    - The "impulseResponse" value MUST be one of the following strings, representing available impulse responses: "cathedral", "small_room", "cave", "none".
-    - Choose the best fit for the user's prompt. Choose "none" if no reverb is implied.
-
-2.  **Delay Module (DelayNode):**
-    - The "delay" key's value is an object with three keys: "enabled", "time", "feedback".
-    - "enabled": A boolean (true/false). Set to true if the prompt implies an echo or delay.
-    - "time": A number between 0.0 and 2.0 (in seconds). This is the delay time. A longer time for distinct echoes, shorter for a 'slapback' effect.
-    - "feedback": A number between 0.0 and 0.9. This is the amount of delayed signal fed back into the delay line, creating repeating echoes. 0.0 means one echo. 0.9 is almost infinite.
-
-3.  **Filter Module (BiquadFilterNode):**
-    - The "filter" key's value is an object with four keys: "enabled", "type", "frequency", "q".
-    - "enabled": A boolean (true/false). Set to true if the prompt implies tonal shaping (e.g., "muffled", "tinny", "underwater", "warm").
-    - "type": MUST be one of the following strings: "lowpass", "highpass", "bandpass".
-    - "frequency": A number between 20 and 20000 (in Hz). This is the filter's cutoff or center frequency.
-    - "q": A number between 0.1 and 20. This is the Quality or resonance factor. Keep it around 1 for most natural effects.
-    
-Your response MUST be ONLY the JSON object.
-`;
-
-    try {
-        const response: GenerateContentResponse = await ai.models.generateContent({
-            model: GEMINI_MODEL_NAME,
-            contents: this.effectsPrompt,
-            config: {
-                systemInstruction: systemInstruction,
-                responseMimeType: "application/json",
-            }
-        });
-        
-        let jsonStr = response.text.trim();
-        const fenceRegex = /^```(?:json)?\s*\n?(.*?)\n?\s*```$/s;
-        const match = jsonStr.match(fenceRegex);
-        if (match && match[1]) {
-            jsonStr = match[1].trim();
-        }
-
-        const params: EffectParameters = JSON.parse(jsonStr);
-        this.applyEffectParameters(params);
-        this.toastMessage?.show?.("Smart effects applied!");
-
-        // If effects were not active, activate them to hear the new sound.
-        if (!this.isEffectsChainActive) {
-            this.toggleEffectsChain(true);
-        }
-
-    } catch (e: any) {
-        console.error("Error applying smart effects:", e);
-        this.toastMessage?.show?.(`Error: ${e.message || "Could not apply effects."}`);
-    } finally {
-        this.isEffectsLoading = false;
-    }
-  }
-
-
   override render() {
     if (!this.setupComplete) {
       return html`<initial-setup-screen @knobs-generated=${this.handleKnobsGenerated}></initial-setup-screen>`;
@@ -1295,6 +1101,30 @@ Your response MUST be ONLY the JSON object.
                 ${AVAILABLE_SAMPLE_RATES.map(rate => html`<option value="${rate}" ?selected=${rate === this.devAudioContextSampleRate}>${rate} Hz</option>`)}
             </select>
           </div>
+          <div class="dev-setting-row">
+            <label for="mixing-strategy">Mixing Strategy:</label>
+            <select id="mixing-strategy" @change=${(e: Event) => { this.mixingStrategy = (e.target as HTMLSelectElement).value as any; this.setSessionPrompts(); }}>
+              <option value="linear" ?selected=${this.mixingStrategy === 'linear'}>Linear (Default)</option>
+              <option value="power" ?selected=${this.mixingStrategy === 'power'}>Power Scale</option>
+              <option value="softmax" ?selected=${this.mixingStrategy === 'softmax'}>Softmax</option>
+            </select>
+          </div>
+          ${this.mixingStrategy === 'power' ? html`
+            <div class="dev-setting-row">
+              <label for="mixing-power">Mixing Power (p):</label>
+              <input type="range" id="mixing-power" min="0.1" max="5.0" step="0.1" .value=${this.mixingPower.toString()} 
+                     @input=${(e: Event) => { this.mixingPower = parseFloat((e.target as HTMLInputElement).value); this.setSessionPrompts(); }}>
+              <span>${this.mixingPower.toFixed(1)}</span>
+            </div>
+          ` : ''}
+          ${this.mixingStrategy === 'softmax' ? html`
+            <div class="dev-setting-row">
+              <label for="mixing-temp">Temperature (τ):</label>
+              <input type="range" id="mixing-temp" min="0.1" max="2.0" step="0.1" .value=${this.mixingTemperature.toString()} 
+                     @input=${(e: Event) => { this.mixingTemperature = parseFloat((e.target as HTMLInputElement).value); this.setSessionPrompts(); }}>
+              <span>${this.mixingTemperature.toFixed(1)}</span>
+            </div>
+          ` : ''}
           <button @click=${this.applyDevSettings} ?disabled=${!this.devSettingsHaveChanged}>Apply Changes</button>
         </div>
       ` : ''}
@@ -1311,7 +1141,7 @@ Your response MUST be ONLY the JSON object.
               <span>${preset.name}</span>
               <div style="display: flex; gap: 4px;">
                 <button @click=${() => this.loadPreset(preset.name)}>Load</button>
-                <button @click=${() => this.deletePreset(preset.name)} style="color: #ff4444; border-color: #ff4444;">Del</button>
+                <button @click=${() => this.deletePreset(preset.id!, preset.name)} style="color: #ff4444; border-color: #ff4444;">Del</button>
               </div>
             </div>
           `) : html`<p style="color: #444; font-size: 0.8rem;">No presets saved yet.</p>`}
@@ -1356,29 +1186,6 @@ Your response MUST be ONLY the JSON object.
           .playbackStateForOverlay=${this.playbackState}>
       </weight-history-graph>
       
-      <div id="effects-panel">
-        <h2>Master Effects</h2>
-        <div class="effects-controls">
-          <textarea id="effects-prompt" 
-                    .value=${this.effectsPrompt} 
-                    @input=${(e: Event) => this.effectsPrompt = (e.target as HTMLTextAreaElement).value}
-                    placeholder="Describe the sound environment..."
-          ></textarea>
-          <div class="effects-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <label class="toggle-switch">
-                <input type="checkbox" ?checked=${this.isEffectsChainActive} @change=${() => this.toggleEffectsChain()}>
-                <span class="slider"></span>
-              </label>
-              <span style="font-family: var(--mono-font); font-size: 0.7rem; color: #666;">BYPASS</span>
-            </div>
-            <button @click=${this.applySmartEffects} ?disabled=${this.isEffectsLoading || !this.isEffectsChainActive} style="width: auto;">
-              ${this.isEffectsLoading ? html`<div class="loading-spinner"></div>` : 'Apply'}
-            </button>
-          </div>
-        </div>
-      </div>
-
       <play-pause-button
         .playbackState=${this.playbackState}
         @click=${this.togglePlayPause}
