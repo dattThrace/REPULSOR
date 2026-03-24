@@ -61,81 +61,84 @@ export class InitialSetupScreen extends LitElement {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100%;
+      min-height: 100%;
       width: 100%;
-      background-color: #050505;
+      background: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #050505 100%);
       color: #fff;
-      padding: 20px;
+      padding: 24px;
       box-sizing: border-box;
       text-align: center;
       overflow-y: auto;
       font-family: 'Inter', sans-serif;
     }
     .setup-container {
-      background-color: #111;
-      padding: 40px;
-      border-radius: 24px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+      background: rgba(20, 20, 20, 0.6);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      padding: 40px 24px;
+      border-radius: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
       width: 100%;
-      max-width: 600px;
-      animation: fadeIn 0.6s ease-out;
+      max-width: 400px;
+      animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(40px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
     h2 {
       margin-top: 0;
-      font-size: 2rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      background: linear-gradient(to right, #fff, #888);
+      font-size: 2.5rem;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.04em;
+      background: linear-gradient(135deg, #fff 0%, #a5a5a5 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
     p {
       color: #888;
-      margin-bottom: 32px;
-      font-size: 1rem;
+      margin-bottom: 40px;
+      font-size: 1.05rem;
+      line-height: 1.5;
     }
     .form-group {
-      margin-bottom: 24px;
+      margin-bottom: 28px;
       text-align: left;
     }
     label {
       display: block;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       font-weight: 600;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: #666;
+      letter-spacing: 0.1em;
+      color: #aaa;
     }
     textarea,
-    input[type="text"],
-    input[type="range"] {
+    input[type="text"] {
       width: 100%;
-      padding: 14px;
-      border-radius: 12px;
-      border: 1px solid #222;
-      background-color: #0a0a0a;
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background-color: rgba(0,0,0,0.3);
       color: #fff;
       box-sizing: border-box;
       font-size: 1rem;
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
       font-family: inherit;
     }
     textarea:focus,
     input[type="text"]:focus {
       outline: none;
-      border-color: #4CAF50;
-      background-color: #0f0f0f;
-      box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.1);
+      border-color: #ff4e00;
+      background-color: rgba(0,0,0,0.5);
+      box-shadow: 0 0 0 4px rgba(255, 78, 0, 0.15);
     }
     textarea {
-      min-height: 100px;
+      min-height: 120px;
       resize: none;
     }
     .specific-knob-input {
@@ -147,59 +150,86 @@ export class InitialSetupScreen extends LitElement {
     .specific-knob-input input[type="text"] {
       flex-grow: 1;
     }
-    button {
+    .primary-btn {
       width: 100%;
-      padding: 16px;
-      border-radius: 12px;
+      padding: 18px;
+      border-radius: 100px;
       border: none;
-      background-color: #fff;
+      background: #fff;
       color: #000;
-      font-size: 1rem;
+      font-size: 1.05rem;
       font-weight: 700;
+      letter-spacing: -0.01em;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 12px;
-      margin-top: 16px;
+      margin-top: 24px;
+      box-shadow: 0 8px 20px rgba(255,255,255,0.15);
     }
-    button:hover:not(:disabled) {
-      background-color: #eee;
-      transform: translateY(-1px);
+    .primary-btn:hover:not(:disabled) {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 12px 24px rgba(255,255,255,0.2);
     }
-    button:active:not(:disabled) {
-      transform: translateY(0);
+    .primary-btn:active:not(:disabled) {
+      transform: translateY(0) scale(0.98);
     }
-    button:disabled {
-      background-color: #222;
-      color: #444;
+    .primary-btn:disabled {
+      background: #333;
+      color: #666;
+      box-shadow: none;
       cursor: not-allowed;
+    }
+    .secondary-btn {
+      background: transparent;
+      color: #888;
+      border: none;
+      width: 100%;
+      padding: 16px;
+      margin-top: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .secondary-btn:hover {
+      color: #fff;
     }
     .add-knob-btn {
       background-color: transparent;
-      color: #4CAF50;
-      border: 1px dashed #4CAF50;
+      color: #ff4e00;
+      border: 1px dashed rgba(255, 78, 0, 0.5);
       font-size: 0.9rem;
-      padding: 10px;
+      padding: 12px;
       margin-top: 0;
+      border-radius: 12px;
+      width: 100%;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
     }
     .add-knob-btn:hover:not(:disabled) {
-      background-color: rgba(76, 175, 80, 0.05);
+      background-color: rgba(255, 78, 0, 0.1);
+      border-color: #ff4e00;
     }
     .remove-knob-btn {
-      background-color: #1a1a1a;
-      color: #666;
-      width: 44px;
-      height: 44px;
+      background-color: rgba(255,255,255,0.05);
+      color: #888;
+      width: 48px;
+      height: 48px;
       padding: 0;
       margin: 0;
-      border-radius: 12px;
+      border-radius: 16px;
+      border: none;
       font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.2s;
     }
     .remove-knob-btn:hover {
       color: #ff4444;
-      background-color: #222;
+      background-color: rgba(255, 68, 68, 0.1);
     }
     .loading-spinner {
       border: 3px solid rgba(0,0,0,0.1);
@@ -215,31 +245,34 @@ export class InitialSetupScreen extends LitElement {
     }
     .creativity-value {
       float: right;
-      color: #4CAF50;
+      color: #ff4e00;
       font-family: var(--mono-font);
     }
     small {
       display: block;
       margin-top: 8px;
-      color: #444;
+      color: #666;
       font-size: 0.75rem;
+      line-height: 1.4;
     }
     input[type="range"] {
       -webkit-appearance: none;
-      height: 6px;
-      background: #222;
-      border-radius: 3px;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
       padding: 0;
       margin: 16px 0;
+      width: 100%;
     }
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 20px;
-      height: 20px;
-      background: #4CAF50;
+      width: 24px;
+      height: 24px;
+      background: #fff;
       border-radius: 50%;
       cursor: pointer;
-      box-shadow: 0 0 10px rgba(76, 175, 80, 0.4);
+      border: 2px solid #000;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
     }
   `;
 
@@ -252,6 +285,7 @@ export class InitialSetupScreen extends LitElement {
 
 
   private addSpecificKnob() {
+    if (navigator.vibrate) navigator.vibrate(10);
     if (this.specificKnobs.length < MAX_SPECIFIC_KNOBS) {
       this.specificKnobs = [...this.specificKnobs, { id: Date.now(), text: "" }];
     } else {
@@ -260,6 +294,7 @@ export class InitialSetupScreen extends LitElement {
   }
 
   private removeSpecificKnob(idToRemove: number) {
+    if (navigator.vibrate) navigator.vibrate(10);
     this.specificKnobs = this.specificKnobs.filter(knob => knob.id !== idToRemove);
   }
 
@@ -290,6 +325,7 @@ export class InitialSetupScreen extends LitElement {
   }
 
   private quickStart() {
+    if (navigator.vibrate) navigator.vibrate(10);
     this.isLoading = true;
     this.showToast("Quick starting with default knobs...");
     
@@ -322,6 +358,7 @@ export class InitialSetupScreen extends LitElement {
 
 
   private async generateKnobs() {
+    if (navigator.vibrate) navigator.vibrate(10);
     this.isLoading = true;
     this.showToast("Generating your custom knobs... this might take a moment!");
 
@@ -613,11 +650,11 @@ Now, generate the full ${TOTAL_KNOBS} knobs according to all these rules.`;
           ` : ''}
         </div>
 
-        <button @click=${this.generateKnobs} ?disabled=${this.isLoading}>
+        <button class="primary-btn" @click=${this.generateKnobs} ?disabled=${this.isLoading}>
           ${this.isLoading ? html`<div class="loading-spinner"></div> Generating...` : '🎵 Generate My Knobs!'}
         </button>
 
-        <button @click=${this.quickStart} ?disabled=${this.isLoading} style="background: transparent; color: #666; border: 1px solid #222; margin-top: 12px; font-size: 0.8rem;">
+        <button class="secondary-btn" @click=${this.quickStart} ?disabled=${this.isLoading}>
           Quick Start (Default Knobs)
         </button>
       </div>

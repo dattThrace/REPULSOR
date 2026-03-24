@@ -29,25 +29,29 @@ export class PromptController extends LitElement {
     #midi {
       font-family: var(--mono-font);
       text-align: center;
-      font-size: 0.6rem;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 4px;
-      padding: 2px 6px;
-      color: #666;
-      background: rgba(255, 255, 255, 0.02);
+      font-size: 0.65rem;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 100px;
+      padding: 4px 10px;
+      color: #888;
+      background: rgba(255, 255, 255, 0.05);
       cursor: pointer;
       visibility: hidden;
       user-select: none;
       transition: all 0.2s ease;
+      font-weight: 600;
+      letter-spacing: 0.05em;
     }
     #midi:hover {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.1);
       color: #fff;
+      border-color: rgba(255, 255, 255, 0.3);
     }
     .learn-mode #midi {
-      color: #ffcc00;
-      border-color: #ffcc00;
-      background: rgba(255, 204, 0, 0.1);
+      color: #000;
+      border-color: #00ff00;
+      background: #00ff00;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.4);
     }
     .show-cc #midi {
       visibility: visible;
@@ -58,9 +62,9 @@ export class PromptController extends LitElement {
       font-size: 0.85rem;
       max-width: 100%;
       min-width: 40px;
-      padding: 4px 8px;
+      padding: 6px 10px;
       flex-shrink: 0;
-      border-radius: 8px;
+      border-radius: 12px;
       text-align: center;
       white-space: wrap;
       word-break: break-word;
@@ -73,8 +77,9 @@ export class PromptController extends LitElement {
       transition: all 0.2s ease;
     }
     #text:focus {
-      background: #1a1a1a;
-      border-color: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
     }
     :host([filtered=true]) #text {
       color: #ff4444;

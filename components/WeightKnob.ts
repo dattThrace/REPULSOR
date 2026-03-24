@@ -61,6 +61,7 @@ export class WeightKnob extends LitElement {
   }
 
   private handlePointerDown(e: PointerEvent) {
+    if (navigator.vibrate) navigator.vibrate(10);
     this.dragStartPos = e.clientY;
     this.dragStartValue = this.value;
     document.body.classList.add('dragging');
@@ -76,6 +77,7 @@ export class WeightKnob extends LitElement {
   }
 
   private handlePointerUp(e: PointerEvent) {
+    if (navigator.vibrate) navigator.vibrate(10);
     window.removeEventListener('pointermove', this.handlePointerMove);
     window.removeEventListener('pointerup', this.handlePointerUp);
     document.body.classList.remove('dragging');

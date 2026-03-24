@@ -50,66 +50,128 @@ class PromptDjMidi extends LitElement {
   static override styles = css`
     :host {
       --mono-font: 'JetBrains Mono', 'Roboto Mono', monospace;
+      --accent: #ff4e00;
+      --bg: #050505;
+      --panel-bg: rgba(15, 15, 15, 0.95);
+      
       height: 100%;
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
-      align-items: center;
       box-sizing: border-box;
       position: relative;
-      overflow-y: auto;
-      background: #050505;
+      background: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #050505 100%);
       color: #fff;
       font-family: 'Inter', sans-serif;
-    }
-    :host([data-setup-complete]) {
-       padding-top: 100px;
-       padding-bottom: 40px;
+      overflow: hidden;
     }
     
+    #app-header {
+      position: absolute;
+      top: max(16px, env(safe-area-inset-top));
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background: rgba(20, 20, 20, 0.6);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 100px;
+      z-index: 100;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    #app-title {
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #fff 0%, #a5a5a5 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    #connection-status {
+      font-family: var(--mono-font);
+      font-size: 0.65rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #444;
+    }
+    .status-dot.active {
+      background: #00ff00;
+      box-shadow: 0 0 8px #00ff00;
+    }
+    .status-dot.error {
+      background: #ff4444;
+      box-shadow: 0 0 8px #ff4444;
+    }
+
+    #main-stage {
+      flex: 1;
+      overflow-y: auto;
+      padding: calc(max(16px, env(safe-area-inset-top)) + 80px) 16px 120px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
     #knob-groups-container {
       display: flex;
       flex-direction: column;
       gap: 32px;
-      width: 95%;
+      width: 100%;
       max-width: 1000px;
-      margin-top: 24px;
     }
 
     .knob-group {
-      background-color: #111;
-      border-radius: 24px;
-      padding: 24px;
+      background: rgba(20, 20, 20, 0.4);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 32px;
+      padding: 32px 24px;
       border: 1px solid rgba(255, 255, 255, 0.05);
-      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
     }
 
     .knob-group-title {
-      color: #666;
-      font-size: 0.75rem;
-      font-weight: 700;
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.15em;
       margin-top: 0;
-      margin-bottom: 24px;
+      margin-bottom: 32px;
       text-align: center;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 16px;
+      opacity: 0.9;
     }
 
     .knobs-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
       gap: 24px;
       justify-content: center;
     }
-    
+
     prompt-controller {
       width: 100%;
     }
 
     weight-history-graph {
-      width: 95%;
+      width: 100%;
       max-width: 1000px;
       height: 200px;
       margin-top: 32px;
@@ -119,119 +181,195 @@ class PromptDjMidi extends LitElement {
       overflow: hidden;
     }
 
-    #top-controls {
+    #bottom-bar {
       position: fixed;
-      top: 0;
+      bottom: 0;
       left: 0;
       width: 100%;
       padding: 16px 24px;
-      box-sizing: border-box;
-      z-index: 100;
-      background: rgba(5, 5, 5, 0.8);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+      background: rgba(10, 10, 10, 0.6);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      z-index: 200;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      box-sizing: border-box;
     }
 
-    #buttons {
+    .bottom-controls-group {
       display: flex;
       gap: 12px;
       align-items: center;
     }
 
-    button, .button-like {
-      font-family: var(--mono-font);
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: #888;
+      padding: 12px;
+      border-radius: 50%;
       cursor: pointer;
-      color: #fff;
-      background: #1a1a1a;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      padding: 8px 16px;
       transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-
-    button:hover:not(:disabled) {
-      background: #222;
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    button.active {
-      background: #fff;
-      color: #000;
-      border-color: #fff;
-    }
-
-    button.recording {
-      background: #ff4444;
+    .icon-btn:hover {
       color: #fff;
-      border-color: #ff4444;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .icon-btn.active {
+      color: var(--accent);
+      background: rgba(255, 78, 0, 0.15);
+    }
+    .icon-btn.recording {
+      color: #ff4444;
       animation: pulse 2s infinite;
     }
 
     @keyframes pulse {
       0% { opacity: 1; }
-      50% { opacity: 0.7; }
+      50% { opacity: 0.5; }
       100% { opacity: 1; }
     }
 
-    #connection-status {
-      font-family: var(--mono-font);
-      font-size: 0.65rem;
-      color: #444;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+    .play-pause-container {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: calc(max(16px, env(safe-area-inset-bottom)) + 15px);
+      z-index: 250;
+    }
+    
+    play-pause-button {
+      transform: scale(0.85);
     }
 
-    #dev-settings-panel, #music-config-panel, .presets-panel {
-      backdrop-filter: blur(20px);
-      border-radius: 24px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-      z-index: 110;
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 1000;
       display: flex;
-      flex-direction: column;
-      gap: 16px;
-      animation: slideIn 0.3s ease-out;
-      max-height: 70vh;
-      overflow-y: auto;
+      align-items: center;
+      justify-content: center;
       padding: 24px;
+      box-sizing: border-box;
     }
 
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(20px); }
-      to { opacity: 1; transform: translateX(0); }
+    .modal-content {
+      background: rgba(20, 20, 20, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 32px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+
+    .modal-content p {
+      margin: 0 0 24px 0;
+      font-size: 1.05rem;
+      line-height: 1.5;
+      color: #fff;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .modal-actions button {
+      flex: 1;
+    }
+
+    .bottom-sheet {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(15, 15, 15, 0.85);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border-radius: 32px 32px 0 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+      z-index: 150;
+      padding: 32px 24px;
+      padding-bottom: calc(100px + env(safe-area-inset-bottom));
+      box-sizing: border-box;
+      max-height: 85vh;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+    .bottom-sheet.open {
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .sheet-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin: 0;
+    }
+    .close-btn {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: #fff;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
     }
 
     .dev-setting-row {
       display: flex;
       flex-direction: column;
       gap: 8px;
+      margin-bottom: 20px;
     }
-
     .dev-setting-row label {
-      font-size: 0.65rem;
-      font-weight: 700;
+      font-size: 0.7rem;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #444;
+      letter-spacing: 0.05em;
+      color: #aaa;
     }
-
-    .dev-setting-row input, .dev-setting-row select {
-      background: #0a0a0a;
-      border: 1px solid #222;
-      border-radius: 8px;
-      padding: 10px;
+    .dev-setting-row input:not([type="range"]):not([type="checkbox"]), .dev-setting-row select {
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 12px 16px;
       color: #fff;
-      font-size: 0.85rem;
+      font-size: 1rem;
       font-family: var(--mono-font);
     }
-
+    .dev-setting-row input:focus, .dev-setting-row select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    
     .dev-setting-row input[type="range"] {
       padding: 0;
       height: 4px;
@@ -243,8 +381,8 @@ class PromptDjMidi extends LitElement {
     }
     .dev-setting-row input[type="range"]::-webkit-slider-thumb {
       appearance: none;
-      width: 16px;
-      height: 16px;
+      width: 20px;
+      height: 20px;
       background: #fff;
       border-radius: 50%;
       cursor: pointer;
@@ -257,14 +395,53 @@ class PromptDjMidi extends LitElement {
       text-align: right;
     }
 
+    .primary-btn {
+      background: #fff;
+      color: #000;
+      border: none;
+      border-radius: 100px;
+      padding: 16px 24px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 16px;
+      transition: background 0.2s;
+    }
+    .primary-btn:hover:not(:disabled) {
+      background: #ccc;
+    }
+    .primary-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     .preset-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 12px;
-      background: rgba(255, 255, 255, 0.02);
-      border-radius: 12px;
-      font-size: 0.85rem;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+    .preset-item button {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .preset-item button.del-btn {
+      background: rgba(255, 68, 68, 0.2);
+      color: #ff4444;
     }
   `;
 
@@ -309,6 +486,7 @@ class PromptDjMidi extends LitElement {
   @state() private devSettingsHaveChanged = false;
 
   @state() private showMusicConfig = false;
+  @state() private confirmDialog: { show: boolean, message: string, onConfirm: () => void, onCancel: () => void } = { show: false, message: '', onConfirm: () => {}, onCancel: () => {} };
   @state() private devGuidance = 4.0;
   @state() private devBpm = 120;
   @state() private devDensity = 0.5;
@@ -877,6 +1055,7 @@ class PromptDjMidi extends LitElement {
   }
 
   private togglePlayPause() {
+    if (navigator.vibrate) navigator.vibrate(50);
     if (this.playbackState === 'playing' || this.playbackState === 'loading') {
       this.pause();
     } else {
@@ -901,27 +1080,50 @@ class PromptDjMidi extends LitElement {
     this.midiDispatcher.activeMidiInputId = this.activeMidiInputId;
   }
 
-  private toggleDevSettings() {
-    this.showDevSettings = !this.showDevSettings;
-    if (this.showDevSettings) {
-      this.showMusicConfig = false;
-      this.showPresetsPanel = false;
-    }
+  private showConfirm(message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      this.confirmDialog = {
+        show: true,
+        message,
+        onConfirm: () => {
+          this.confirmDialog = { ...this.confirmDialog, show: false };
+          resolve(true);
+        },
+        onCancel: () => {
+          this.confirmDialog = { ...this.confirmDialog, show: false };
+          resolve(false);
+        }
+      };
+    });
   }
 
-  private toggleMusicConfig() {
-    this.showMusicConfig = !this.showMusicConfig;
-    if (this.showMusicConfig) {
-      this.showDevSettings = false;
-      this.showPresetsPanel = false;
+  private async handleMenuToggle(targetMenu: 'devSettings' | 'musicConfig' | 'presets') {
+    if (this.showDevSettings && targetMenu !== 'devSettings' && this.devSettingsHaveChanged) {
+      const proceed = await this.showConfirm("You have unsaved Settings. Close without applying?");
+      if (!proceed) return;
     }
-  }
+    if (this.showMusicConfig && targetMenu !== 'musicConfig' && this.musicConfigHaveChanged) {
+      const proceed = await this.showConfirm("You have unsaved Music Config. Close without applying?");
+      if (!proceed) return;
+    }
 
-  private togglePresetsPanel() {
-    this.showPresetsPanel = !this.showPresetsPanel;
-    if (this.showPresetsPanel) {
-      this.showDevSettings = false;
-      this.showMusicConfig = false;
+    if (targetMenu === 'devSettings') {
+      if (this.showDevSettings && this.devSettingsHaveChanged) {
+         const proceed = await this.showConfirm("You have unsaved Settings. Close without applying?");
+         if (!proceed) return;
+      }
+      this.showDevSettings = !this.showDevSettings;
+      if (this.showDevSettings) { this.showMusicConfig = false; this.showPresetsPanel = false; }
+    } else if (targetMenu === 'musicConfig') {
+      if (this.showMusicConfig && this.musicConfigHaveChanged) {
+         const proceed = await this.showConfirm("You have unsaved Music Config. Close without applying?");
+         if (!proceed) return;
+      }
+      this.showMusicConfig = !this.showMusicConfig;
+      if (this.showMusicConfig) { this.showDevSettings = false; this.showPresetsPanel = false; }
+    } else if (targetMenu === 'presets') {
+      this.showPresetsPanel = !this.showPresetsPanel;
+      if (this.showPresetsPanel) { this.showDevSettings = false; this.showMusicConfig = false; }
     }
   }
 
@@ -1049,7 +1251,8 @@ class PromptDjMidi extends LitElement {
   }
 
   private async deletePreset(id: number, presetName: string) {
-    if (confirm(`Are you sure you want to delete the preset "${presetName}"?`)) {
+    const proceed = await this.showConfirm(`Are you sure you want to delete the preset "${presetName}"?`);
+    if (proceed) {
       try {
         const response = await fetch(`/api/presets/${id}`, { method: 'DELETE' });
         if (response.ok) {
@@ -1139,7 +1342,8 @@ class PromptDjMidi extends LitElement {
     const confirmationMessage = "Are you sure you want to generate a new soundboard? " +
                                 "Your current layout and any unsaved recordings will be lost (unless saved as a preset).";
 
-    if (confirm(confirmationMessage)) {
+    const proceed = await this.showConfirm(confirmationMessage);
+    if (proceed) {
       await this.stop();
   
       // Explicitly reset all other state related to the board for a clean slate.
@@ -1151,6 +1355,7 @@ class PromptDjMidi extends LitElement {
       // Hide UI panels for a cleaner setup screen experience
       this.showMidi = false;
       this.showDevSettings = false;
+      this.showMusicConfig = false;
       this.showPresetsPanel = false;
       
       // Finally, trigger the view switch back to the setup screen.
@@ -1178,220 +1383,262 @@ class PromptDjMidi extends LitElement {
     return html`
       <div id="background"></div>
       <toast-message></toast-message>
-      <div id="top-controls">
-        <div id="buttons">
-          <button @click=${this.togglePlayPause} class=${classMap({ active: this.playbackState === 'playing' || this.playbackState === 'loading' })}>
-            ${this.playbackState === 'playing' || this.playbackState === 'loading' ? 'Pause' : 'Play'}
-          </button>
-          <button @click=${this.toggleMidi} class=${classMap({ active: this.showMidi })}>MIDI</button>
-          <button @click=${this.toggleDevSettings} class=${classMap({ active: this.showDevSettings })}>Settings</button>
-          <button @click=${this.toggleMusicConfig} class=${classMap({ active: this.showMusicConfig })}>Music Config</button>
-          <button @click=${this.togglePresetsPanel} class=${classMap({ active: this.showPresetsPanel })}>Presets</button>
-          <button @click=${this.toggleRecording} class=${classMap({ recording: this.isRecording })}>
-            ${this.isRecording ? 'Stop' : 'Record'}
-          </button>
-        </div>
-        
-        <div id="connection-status" role="status" aria-live="polite">${this.connectionStatusMessage}</div>
-      </div>
-
-      ${this.showDevSettings ? html`
-        <div id="dev-settings-panel">
-          <div class="dev-setting-row">
-            <label for="dev-model-name">Model Name:</label>
-            <input type="text" id="dev-model-name" .value=${this.devModelName} 
-                   @input=${(e: Event) => { this.devModelName = (e.target as HTMLInputElement).value; this._updateDevSettingsChangedStatus(); }}>
-          </div>
-          <div class="dev-setting-row">
-            <label for="dev-buffer-time">Client Buffer Time (s):</label>
-            <input type="number" id="dev-buffer-time" min="0.1" max="10" step="0.1" .value=${this.devClientBufferTime.toString()} 
-                   @input=${(e: Event) => this.devClientBufferTime = parseFloat((e.target as HTMLInputElement).value)}>
-          </div>
-          <div class="dev-setting-row">
-            <label for="dev-sample-rate">AudioContext Sample Rate:</label>
-            <select id="dev-sample-rate"
-                    @change=${(e: Event) => { this.devAudioContextSampleRate = parseInt((e.target as HTMLSelectElement).value); this._updateDevSettingsChangedStatus();}}>
-                ${AVAILABLE_SAMPLE_RATES.map(rate => html`<option value="${rate}" ?selected=${rate === this.devAudioContextSampleRate}>${rate} Hz</option>`)}
-            </select>
-          </div>
-          <div class="dev-setting-row">
-            <label for="mixing-strategy">Mixing Strategy:</label>
-            <select id="mixing-strategy" @change=${(e: Event) => { this.mixingStrategy = (e.target as HTMLSelectElement).value as any; this.setSessionPrompts(); }}>
-              <option value="linear" ?selected=${this.mixingStrategy === 'linear'}>Linear (Default)</option>
-              <option value="power" ?selected=${this.mixingStrategy === 'power'}>Power Scale</option>
-              <option value="softmax" ?selected=${this.mixingStrategy === 'softmax'}>Softmax</option>
-            </select>
-          </div>
-          ${this.mixingStrategy === 'power' ? html`
-            <div class="dev-setting-row">
-              <label for="mixing-power">Mixing Power (p):</label>
-              <input type="range" id="mixing-power" min="0.1" max="5.0" step="0.1" .value=${this.mixingPower.toString()} 
-                     @input=${(e: Event) => { this.mixingPower = parseFloat((e.target as HTMLInputElement).value); this.setSessionPrompts(); }}>
-              <span>${this.mixingPower.toFixed(1)}</span>
-            </div>
-          ` : ''}
-          ${this.mixingStrategy === 'softmax' ? html`
-            <div class="dev-setting-row">
-              <label for="mixing-temp">Temperature (τ):</label>
-              <input type="range" id="mixing-temp" min="0.1" max="2.0" step="0.1" .value=${this.mixingTemperature.toString()} 
-                     @input=${(e: Event) => { this.mixingTemperature = parseFloat((e.target as HTMLInputElement).value); this.setSessionPrompts(); }}>
-              <span>${this.mixingTemperature.toFixed(1)}</span>
-            </div>
-          ` : ''}
-          <button @click=${this.applyDevSettings} ?disabled=${!this.devSettingsHaveChanged}>Apply Changes</button>
-        </div>
-      ` : ''}
-
-      ${this.showMusicConfig ? html`
-        <div id="music-config-panel">
-          <div class="dev-setting-row">
-            <label for="dev-guidance">Guidance (0-6):</label>
-            <input type="range" id="dev-guidance" min="0" max="6" step="0.1" .value=${this.devGuidance.toString()} 
-                   @input=${(e: Event) => { this.devGuidance = parseFloat((e.target as HTMLInputElement).value); this.musicConfigHaveChanged = true; }}>
-            <span>${this.devGuidance.toFixed(1)}</span>
-          </div>
-          <div class="dev-setting-row">
-            <label for="dev-bpm">BPM (60-200):</label>
-            <input type="number" id="dev-bpm" min="60" max="200" step="1" .value=${this.devBpm.toString()} 
-                   @input=${(e: Event) => { this.devBpm = parseInt((e.target as HTMLInputElement).value); this.musicConfigHaveChanged = true; }}>
-          </div>
-          <div class="dev-setting-row">
-            <label for="dev-density">Density (0-1):</label>
-            <input type="range" id="dev-density" min="0" max="1" step="0.05" .value=${this.devDensity.toString()} 
-                   @input=${(e: Event) => { this.devDensity = parseFloat((e.target as HTMLInputElement).value); this.musicConfigHaveChanged = true; }}>
-            <span>${this.devDensity.toFixed(2)}</span>
-          </div>
-          <div class="dev-setting-row">
-            <label for="dev-brightness">Brightness (0-1):</label>
-            <input type="range" id="dev-brightness" min="0" max="1" step="0.05" .value=${this.devBrightness.toString()} 
-                   @input=${(e: Event) => { this.devBrightness = parseFloat((e.target as HTMLInputElement).value); this.musicConfigHaveChanged = true; }}>
-            <span>${this.devBrightness.toFixed(2)}</span>
-          </div>
-          <div class="dev-setting-row">
-            <label for="dev-scale">Scale:</label>
-            <select id="dev-scale" @change=${(e: Event) => { this.devScale = (e.target as HTMLSelectElement).value; this.musicConfigHaveChanged = true; }}>
-              <option value="SCALE_UNSPECIFIED" ?selected=${this.devScale === 'SCALE_UNSPECIFIED'}>Unspecified</option>
-              <option value="C_MAJOR_A_MINOR" ?selected=${this.devScale === 'C_MAJOR_A_MINOR'}>C Major / A Minor</option>
-              <option value="D_FLAT_MAJOR_B_FLAT_MINOR" ?selected=${this.devScale === 'D_FLAT_MAJOR_B_FLAT_MINOR'}>Db Major / Bb Minor</option>
-              <option value="D_MAJOR_B_MINOR" ?selected=${this.devScale === 'D_MAJOR_B_MINOR'}>D Major / B Minor</option>
-              <option value="E_FLAT_MAJOR_C_MINOR" ?selected=${this.devScale === 'E_FLAT_MAJOR_C_MINOR'}>Eb Major / C Minor</option>
-              <option value="E_MAJOR_D_FLAT_MINOR" ?selected=${this.devScale === 'E_MAJOR_D_FLAT_MINOR'}>E Major / Db Minor</option>
-              <option value="F_MAJOR_D_MINOR" ?selected=${this.devScale === 'F_MAJOR_D_MINOR'}>F Major / D Minor</option>
-              <option value="G_FLAT_MAJOR_E_FLAT_MINOR" ?selected=${this.devScale === 'G_FLAT_MAJOR_E_FLAT_MINOR'}>Gb Major / Eb Minor</option>
-              <option value="G_MAJOR_E_MINOR" ?selected=${this.devScale === 'G_MAJOR_E_MINOR'}>G Major / E Minor</option>
-              <option value="A_FLAT_MAJOR_F_MINOR" ?selected=${this.devScale === 'A_FLAT_MAJOR_F_MINOR'}>Ab Major / F Minor</option>
-              <option value="A_MAJOR_G_FLAT_MINOR" ?selected=${this.devScale === 'A_MAJOR_G_FLAT_MINOR'}>A Major / Gb Minor</option>
-              <option value="B_FLAT_MAJOR_G_MINOR" ?selected=${this.devScale === 'B_FLAT_MAJOR_G_MINOR'}>Bb Major / G Minor</option>
-              <option value="B_MAJOR_A_FLAT_MINOR" ?selected=${this.devScale === 'B_MAJOR_A_FLAT_MINOR'}>B Major / Ab Minor</option>
-            </select>
-          </div>
-          <div class="dev-setting-row" style="flex-direction: row; align-items: center;">
-            <input type="checkbox" id="dev-mute-bass" .checked=${this.devMuteBass} 
-                   @change=${(e: Event) => { this.devMuteBass = (e.target as HTMLInputElement).checked; this.musicConfigHaveChanged = true; }}>
-            <label for="dev-mute-bass" style="margin-top: 0;">Mute Bass</label>
-          </div>
-          <div class="dev-setting-row" style="flex-direction: row; align-items: center;">
-            <input type="checkbox" id="dev-mute-drums" .checked=${this.devMuteDrums} 
-                   @change=${(e: Event) => { this.devMuteDrums = (e.target as HTMLInputElement).checked; this.musicConfigHaveChanged = true; }}>
-            <label for="dev-mute-drums" style="margin-top: 0;">Mute Drums</label>
-          </div>
-          <div class="dev-setting-row" style="flex-direction: row; align-items: center;">
-            <input type="checkbox" id="dev-only-bass-drums" .checked=${this.devOnlyBassAndDrums} 
-                   @change=${(e: Event) => { this.devOnlyBassAndDrums = (e.target as HTMLInputElement).checked; this.musicConfigHaveChanged = true; }}>
-            <label for="dev-only-bass-drums" style="margin-top: 0;">Only Bass & Drums</label>
-          </div>
-          <div class="dev-setting-row">
-            <label for="dev-generation-mode">Generation Mode:</label>
-            <select id="dev-generation-mode" @change=${(e: Event) => { this.devMusicGenerationMode = (e.target as HTMLSelectElement).value; this.musicConfigHaveChanged = true; }}>
-              <option value="QUALITY" ?selected=${this.devMusicGenerationMode === 'QUALITY'}>Quality</option>
-              <option value="DIVERSITY" ?selected=${this.devMusicGenerationMode === 'DIVERSITY'}>Diversity</option>
-              <option value="VOCALIZATION" ?selected=${this.devMusicGenerationMode === 'VOCALIZATION'}>Vocalization</option>
-            </select>
-          </div>
-          <div class="dev-setting-row">
-            <label for="dev-temperature">Temperature (0-3):</label>
-            <input type="range" id="dev-temperature" min="0" max="3" step="0.1" .value=${this.devTemperature.toString()} 
-                   @input=${(e: Event) => { this.devTemperature = parseFloat((e.target as HTMLInputElement).value); this.musicConfigHaveChanged = true; }}>
-            <span>${this.devTemperature.toFixed(1)}</span>
-          </div>
-          <div class="dev-setting-row">
-            <label for="dev-topk">Top K (1-1000):</label>
-            <input type="number" id="dev-topk" min="1" max="1000" step="1" .value=${this.devTopK.toString()} 
-                   @input=${(e: Event) => { this.devTopK = parseInt((e.target as HTMLInputElement).value); this.musicConfigHaveChanged = true; }}>
-          </div>
-          <div class="dev-setting-row">
-            <label for="dev-seed">Seed (-1 for random):</label>
-            <input type="number" id="dev-seed" min="-1" step="1" .value=${this.devSeed.toString()} 
-                   @input=${(e: Event) => { this.devSeed = parseInt((e.target as HTMLInputElement).value); this.musicConfigHaveChanged = true; }}>
-          </div>
-          <button @click=${this.applyMusicConfig} ?disabled=${!this.musicConfigHaveChanged}>Apply Music Config</button>
-        </div>
-      ` : ''}
-
-      ${this.showPresetsPanel ? html`
-        <div class="presets-panel">
-          <h3>Presets</h3>
-          <div class="dev-setting-row">
-            <input type="text" id="preset-name-input" placeholder="Name...">
-            <button @click=${this.savePreset}>Save</button>
-          </div>
-          ${this.savedPresets.length > 0 ? this.savedPresets.map(preset => html`
-            <div class="preset-item">
-              <span>${preset.name}</span>
-              <div style="display: flex; gap: 4px;">
-                <button @click=${() => this.loadPreset(preset.name)}>Load</button>
-                <button @click=${() => this.deletePreset(preset.id!, preset.name)} style="color: #ff4444; border-color: #ff4444;">Del</button>
-              </div>
-            </div>
-          `) : html`<p style="color: #444; font-size: 0.8rem;">No presets saved yet.</p>`}
-        </div>
-      ` : ''}
-
-      <div id="knob-groups-container">
-        ${this.displayKnobGroups.map(group => html`
-          <section class="knob-group" aria-labelledby="${group.groupName.replace(/\s+/g, '-').toLowerCase()}-title">
-            <h3 id="${group.groupName.replace(/\s+/g, '-').toLowerCase()}-title" class="knob-group-title">${group.groupName}</h3>
-            <div class="knobs-container">
-              ${group.knobs.map(knobConfig => {
-                const promptDetails = getPromptByCC(ccCounter);
-                ccCounter++;
-                
-                if (!promptDetails) return html``;
-                return html`
-                  <prompt-controller
-                    .promptId=${promptDetails.promptId}
-                    .text=${promptDetails.text} 
-                    .weight=${promptDetails.weight}
-                    .color=${promptDetails.color} 
-                    .cc=${promptDetails.cc}
-                    .audioLevel=${this.audioLevel}
-                    .midiDispatcher=${this.midiDispatcher}
-                    .showCC=${this.showMidi}
-                    ?filtered=${this.filteredPrompts.has(promptDetails.text)}
-                    @prompt-changed=${this.onPromptChange}
-                  ></prompt-controller>
-                `;
-              })}
-            </div>
-          </section>
-        `)}
-      </div>
-
-      <weight-history-graph 
-          .prompts=${this.prompts} 
-          .history=${this.promptWeightHistory}
-          .historyDurationMs=${HISTORY_DURATION_MS}
-          ?active=${this.playbackState === 'playing' || this.playbackState === 'loading' || this.playbackState === 'paused'}
-          .playbackStateForOverlay=${this.playbackState}>
-      </weight-history-graph>
       
-      <play-pause-button
-        .playbackState=${this.playbackState}
-        @click=${this.togglePlayPause}
-        aria-label=${this.playbackState === 'playing' || this.playbackState === 'loading' ? 'Pause' : 'Play' }
-        aria-pressed=${this.playbackState === 'playing' || this.playbackState === 'loading'}
-        role="button">
-      </play-pause-button>
+      <header id="app-header">
+        <div id="app-title">PROMPT DJ</div>
+        <div id="connection-status" role="status" aria-live="polite">
+          <div class="status-dot ${this.connectionError ? 'error' : (this.serverSetupComplete ? 'active' : '')}"></div>
+          ${this.connectionStatusMessage}
+        </div>
+      </header>
+
+      <main id="main-stage">
+        <div id="knob-groups-container">
+          ${this.displayKnobGroups.map(group => html`
+            <section class="knob-group" aria-labelledby="${group.groupName.replace(/\s+/g, '-').toLowerCase()}-title">
+              <h3 id="${group.groupName.replace(/\s+/g, '-').toLowerCase()}-title" class="knob-group-title">${group.groupName}</h3>
+              <div class="knobs-container">
+                ${group.knobs.map(knobConfig => {
+                  const promptDetails = getPromptByCC(ccCounter);
+                  ccCounter++;
+                  
+                  if (!promptDetails) return html``;
+                  return html`
+                    <prompt-controller
+                      .promptId=${promptDetails.promptId}
+                      .text=${promptDetails.text} 
+                      .weight=${promptDetails.weight}
+                      .color=${promptDetails.color} 
+                      .cc=${promptDetails.cc}
+                      .audioLevel=${this.audioLevel}
+                      .midiDispatcher=${this.midiDispatcher}
+                      .showCC=${this.showMidi}
+                      ?filtered=${this.filteredPrompts.has(promptDetails.text)}
+                      @prompt-changed=${this.onPromptChange}
+                    ></prompt-controller>
+                  `;
+                })}
+              </div>
+            </section>
+          `)}
+        </div>
+
+        <weight-history-graph 
+            .prompts=${this.prompts} 
+            .history=${this.promptWeightHistory}
+            .historyDurationMs=${HISTORY_DURATION_MS}
+            ?active=${this.playbackState === 'playing' || this.playbackState === 'loading' || this.playbackState === 'paused'}
+            .playbackStateForOverlay=${this.playbackState}>
+        </weight-history-graph>
+      </main>
+
+      <nav id="bottom-bar">
+        <div class="bottom-controls-group">
+          <button @click=${() => this.handleMenuToggle('devSettings')} class="icon-btn ${classMap({ active: this.showDevSettings })}" aria-label="Settings">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </button>
+          <button @click=${() => this.handleMenuToggle('musicConfig')} class="icon-btn ${classMap({ active: this.showMusicConfig })}" aria-label="Music Config">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+          </button>
+        </div>
+
+        <div class="bottom-controls-group">
+          <button @click=${() => this.handleMenuToggle('presets')} class="icon-btn ${classMap({ active: this.showPresetsPanel })}" aria-label="Presets">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          </button>
+          <button @click=${this.toggleMidi} class="icon-btn ${classMap({ active: this.showMidi })}" aria-label="MIDI">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="8" y1="2" x2="8" y2="22"></line><line x1="16" y1="2" x2="16" y2="22"></line><line x1="12" y1="2" x2="12" y2="22"></line></svg>
+          </button>
+          <button @click=${this.toggleRecording} class="icon-btn ${classMap({ recording: this.isRecording })}" aria-label="Record">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
+          </button>
+        </div>
+      </nav>
+
+      <div class="play-pause-container">
+        <play-pause-button
+          .playbackState=${this.playbackState}
+          @click=${this.togglePlayPause}
+          aria-label=${this.playbackState === 'playing' || this.playbackState === 'loading' ? 'Pause' : 'Play' }
+          aria-pressed=${this.playbackState === 'playing' || this.playbackState === 'loading'}
+          role="button">
+        </play-pause-button>
+      </div>
+
+      <div class="bottom-sheet ${classMap({ open: this.showDevSettings })}">
+        <div class="sheet-header">
+          <h2 class="sheet-title">Settings</h2>
+          <button class="close-btn" @click=${() => this.handleMenuToggle('devSettings')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+        <div class="dev-setting-row">
+          <label for="dev-model-name">Model Name:</label>
+          <input type="text" id="dev-model-name" .value=${this.devModelName} 
+                 @input=${(e: Event) => { this.devModelName = (e.target as HTMLInputElement).value; this._updateDevSettingsChangedStatus(); }}>
+        </div>
+        <div class="dev-setting-row">
+          <label for="dev-buffer-time">Client Buffer Time (s):</label>
+          <input type="number" id="dev-buffer-time" min="0.1" max="10" step="0.1" .value=${this.devClientBufferTime.toString()} 
+                 @input=${(e: Event) => this.devClientBufferTime = parseFloat((e.target as HTMLInputElement).value)}>
+        </div>
+        <div class="dev-setting-row">
+          <label for="dev-sample-rate">AudioContext Sample Rate:</label>
+          <select id="dev-sample-rate"
+                  @change=${(e: Event) => { this.devAudioContextSampleRate = parseInt((e.target as HTMLSelectElement).value); this._updateDevSettingsChangedStatus();}}>
+              ${AVAILABLE_SAMPLE_RATES.map(rate => html`<option value="${rate}" ?selected=${rate === this.devAudioContextSampleRate}>${rate} Hz</option>`)}
+          </select>
+        </div>
+        <div class="dev-setting-row">
+          <label for="mixing-strategy">Mixing Strategy:</label>
+          <select id="mixing-strategy" @change=${(e: Event) => { this.mixingStrategy = (e.target as HTMLSelectElement).value as any; this.setSessionPrompts(); }}>
+            <option value="linear" ?selected=${this.mixingStrategy === 'linear'}>Linear (Default)</option>
+            <option value="power" ?selected=${this.mixingStrategy === 'power'}>Power Scale</option>
+            <option value="softmax" ?selected=${this.mixingStrategy === 'softmax'}>Softmax</option>
+          </select>
+        </div>
+        ${this.mixingStrategy === 'power' ? html`
+          <div class="dev-setting-row">
+            <label for="mixing-power">Mixing Power (p):</label>
+            <input type="range" id="mixing-power" min="0.1" max="5.0" step="0.1" .value=${this.mixingPower.toString()} 
+                   @input=${(e: Event) => { this.mixingPower = parseFloat((e.target as HTMLInputElement).value); this.setSessionPrompts(); }}>
+            <span>${this.mixingPower.toFixed(1)}</span>
+          </div>
+        ` : ''}
+        ${this.mixingStrategy === 'softmax' ? html`
+          <div class="dev-setting-row">
+            <label for="mixing-temp">Temperature (τ):</label>
+            <input type="range" id="mixing-temp" min="0.1" max="2.0" step="0.1" .value=${this.mixingTemperature.toString()} 
+                   @input=${(e: Event) => { this.mixingTemperature = parseFloat((e.target as HTMLInputElement).value); this.setSessionPrompts(); }}>
+            <span>${this.mixingTemperature.toFixed(1)}</span>
+          </div>
+        ` : ''}
+        <button class="primary-btn" @click=${this.applyDevSettings} ?disabled=${!this.devSettingsHaveChanged}>Apply Changes</button>
+      </div>
+
+      <div class="bottom-sheet ${classMap({ open: this.showMusicConfig })}">
+        <div class="sheet-header">
+          <h2 class="sheet-title">Music Config</h2>
+          <button class="close-btn" @click=${() => this.handleMenuToggle('musicConfig')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+        <div class="dev-setting-row">
+          <label for="dev-guidance">Guidance (0-6):</label>
+          <input type="range" id="dev-guidance" min="0" max="6" step="0.1" .value=${this.devGuidance.toString()} 
+                 @input=${(e: Event) => { this.devGuidance = parseFloat((e.target as HTMLInputElement).value); this.musicConfigHaveChanged = true; }}>
+          <span>${this.devGuidance.toFixed(1)}</span>
+        </div>
+        <div class="dev-setting-row">
+          <label for="dev-bpm">BPM (60-200):</label>
+          <input type="number" id="dev-bpm" min="60" max="200" step="1" .value=${this.devBpm.toString()} 
+                 @input=${(e: Event) => { this.devBpm = parseInt((e.target as HTMLInputElement).value); this.musicConfigHaveChanged = true; }}>
+        </div>
+        <div class="dev-setting-row">
+          <label for="dev-density">Density (0-1):</label>
+          <input type="range" id="dev-density" min="0" max="1" step="0.05" .value=${this.devDensity.toString()} 
+                 @input=${(e: Event) => { this.devDensity = parseFloat((e.target as HTMLInputElement).value); this.musicConfigHaveChanged = true; }}>
+          <span>${this.devDensity.toFixed(2)}</span>
+        </div>
+        <div class="dev-setting-row">
+          <label for="dev-brightness">Brightness (0-1):</label>
+          <input type="range" id="dev-brightness" min="0" max="1" step="0.05" .value=${this.devBrightness.toString()} 
+                 @input=${(e: Event) => { this.devBrightness = parseFloat((e.target as HTMLInputElement).value); this.musicConfigHaveChanged = true; }}>
+          <span>${this.devBrightness.toFixed(2)}</span>
+        </div>
+        <div class="dev-setting-row">
+          <label for="dev-scale">Scale:</label>
+          <select id="dev-scale" @change=${(e: Event) => { this.devScale = (e.target as HTMLSelectElement).value; this.musicConfigHaveChanged = true; }}>
+            <option value="SCALE_UNSPECIFIED" ?selected=${this.devScale === 'SCALE_UNSPECIFIED'}>Unspecified</option>
+            <option value="C_MAJOR_A_MINOR" ?selected=${this.devScale === 'C_MAJOR_A_MINOR'}>C Major / A Minor</option>
+            <option value="D_FLAT_MAJOR_B_FLAT_MINOR" ?selected=${this.devScale === 'D_FLAT_MAJOR_B_FLAT_MINOR'}>Db Major / Bb Minor</option>
+            <option value="D_MAJOR_B_MINOR" ?selected=${this.devScale === 'D_MAJOR_B_MINOR'}>D Major / B Minor</option>
+            <option value="E_FLAT_MAJOR_C_MINOR" ?selected=${this.devScale === 'E_FLAT_MAJOR_C_MINOR'}>Eb Major / C Minor</option>
+            <option value="E_MAJOR_D_FLAT_MINOR" ?selected=${this.devScale === 'E_MAJOR_D_FLAT_MINOR'}>E Major / Db Minor</option>
+            <option value="F_MAJOR_D_MINOR" ?selected=${this.devScale === 'F_MAJOR_D_MINOR'}>F Major / D Minor</option>
+            <option value="G_FLAT_MAJOR_E_FLAT_MINOR" ?selected=${this.devScale === 'G_FLAT_MAJOR_E_FLAT_MINOR'}>Gb Major / Eb Minor</option>
+            <option value="G_MAJOR_E_MINOR" ?selected=${this.devScale === 'G_MAJOR_E_MINOR'}>G Major / E Minor</option>
+            <option value="A_FLAT_MAJOR_F_MINOR" ?selected=${this.devScale === 'A_FLAT_MAJOR_F_MINOR'}>Ab Major / F Minor</option>
+            <option value="A_MAJOR_G_FLAT_MINOR" ?selected=${this.devScale === 'A_MAJOR_G_FLAT_MINOR'}>A Major / Gb Minor</option>
+            <option value="B_FLAT_MAJOR_G_MINOR" ?selected=${this.devScale === 'B_FLAT_MAJOR_G_MINOR'}>Bb Major / G Minor</option>
+            <option value="B_MAJOR_A_FLAT_MINOR" ?selected=${this.devScale === 'B_MAJOR_A_FLAT_MINOR'}>B Major / Ab Minor</option>
+          </select>
+        </div>
+        <div class="dev-setting-row" style="flex-direction: row; align-items: center;">
+          <input type="checkbox" id="dev-mute-bass" .checked=${this.devMuteBass} 
+                 @change=${(e: Event) => { this.devMuteBass = (e.target as HTMLInputElement).checked; this.musicConfigHaveChanged = true; }}>
+          <label for="dev-mute-bass" style="margin-top: 0;">Mute Bass</label>
+        </div>
+        <div class="dev-setting-row" style="flex-direction: row; align-items: center;">
+          <input type="checkbox" id="dev-mute-drums" .checked=${this.devMuteDrums} 
+                 @change=${(e: Event) => { this.devMuteDrums = (e.target as HTMLInputElement).checked; this.musicConfigHaveChanged = true; }}>
+          <label for="dev-mute-drums" style="margin-top: 0;">Mute Drums</label>
+        </div>
+        <div class="dev-setting-row" style="flex-direction: row; align-items: center;">
+          <input type="checkbox" id="dev-only-bass-drums" .checked=${this.devOnlyBassAndDrums} 
+                 @change=${(e: Event) => { this.devOnlyBassAndDrums = (e.target as HTMLInputElement).checked; this.musicConfigHaveChanged = true; }}>
+          <label for="dev-only-bass-drums" style="margin-top: 0;">Only Bass & Drums</label>
+        </div>
+        <div class="dev-setting-row">
+          <label for="dev-generation-mode">Generation Mode:</label>
+          <select id="dev-generation-mode" @change=${(e: Event) => { this.devMusicGenerationMode = (e.target as HTMLSelectElement).value; this.musicConfigHaveChanged = true; }}>
+            <option value="QUALITY" ?selected=${this.devMusicGenerationMode === 'QUALITY'}>Quality</option>
+            <option value="DIVERSITY" ?selected=${this.devMusicGenerationMode === 'DIVERSITY'}>Diversity</option>
+            <option value="VOCALIZATION" ?selected=${this.devMusicGenerationMode === 'VOCALIZATION'}>Vocalization</option>
+          </select>
+        </div>
+        <div class="dev-setting-row">
+          <label for="dev-temperature">Temperature (0-3):</label>
+          <input type="range" id="dev-temperature" min="0" max="3" step="0.1" .value=${this.devTemperature.toString()} 
+                 @input=${(e: Event) => { this.devTemperature = parseFloat((e.target as HTMLInputElement).value); this.musicConfigHaveChanged = true; }}>
+          <span>${this.devTemperature.toFixed(1)}</span>
+        </div>
+        <div class="dev-setting-row">
+          <label for="dev-topk">Top K (1-1000):</label>
+          <input type="number" id="dev-topk" min="1" max="1000" step="1" .value=${this.devTopK.toString()} 
+                 @input=${(e: Event) => { this.devTopK = parseInt((e.target as HTMLInputElement).value); this.musicConfigHaveChanged = true; }}>
+        </div>
+        <div class="dev-setting-row">
+          <label for="dev-seed">Seed (-1 for random):</label>
+          <input type="number" id="dev-seed" min="-1" step="1" .value=${this.devSeed.toString()} 
+                 @input=${(e: Event) => { this.devSeed = parseInt((e.target as HTMLInputElement).value); this.musicConfigHaveChanged = true; }}>
+        </div>
+        <button class="primary-btn" @click=${this.applyMusicConfig} ?disabled=${!this.musicConfigHaveChanged}>Apply Music Config</button>
+      </div>
+
+      <div class="bottom-sheet ${classMap({ open: this.showPresetsPanel })}">
+        <div class="sheet-header">
+          <h2 class="sheet-title">Presets</h2>
+          <button class="close-btn" @click=${() => this.handleMenuToggle('presets')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+        <div class="dev-setting-row" style="flex-direction: row; gap: 12px; margin-bottom: 24px;">
+          <input type="text" id="preset-name-input" placeholder="Name..." style="flex: 1;">
+          <button class="primary-btn" style="width: auto; margin: 0; padding: 12px 24px;" @click=${this.savePreset}>Save</button>
+        </div>
+        ${this.savedPresets.length > 0 ? this.savedPresets.map(preset => html`
+          <div class="preset-item">
+            <span style="font-weight: 600;">${preset.name}</span>
+            <div style="display: flex; gap: 8px;">
+              <button @click=${() => this.loadPreset(preset.name)}>Load</button>
+              <button class="del-btn" @click=${() => this.deletePreset(preset.id!, preset.name)}>Del</button>
+            </div>
+          </div>
+        `) : html`<p style="color: #666; font-size: 0.9rem; text-align: center; margin-top: 32px;">No presets saved yet.</p>`}
+      </div>
+
+      ${this.confirmDialog.show ? html`
+        <div class="modal-overlay">
+          <div class="modal-content">
+            <p>${this.confirmDialog.message}</p>
+            <div class="modal-actions">
+              <button class="cancel-btn" @click=${this.confirmDialog.onCancel}>Cancel</button>
+              <button class="primary-btn" @click=${this.confirmDialog.onConfirm}>Confirm</button>
+            </div>
+          </div>
+        </div>
+      ` : ''}
     `;
   }
 }
