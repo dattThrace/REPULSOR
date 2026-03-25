@@ -65,68 +65,81 @@ export class InitialSetupScreen extends LitElement {
       width: 100%;
       background: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #050505 100%);
       color: #fff;
-      padding: 24px;
+      padding: 16px;
       box-sizing: border-box;
       text-align: center;
       overflow-y: auto;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
     .setup-container {
-      background: rgba(20, 20, 20, 0.6);
+      background: rgba(255, 255, 255, 0.02);
       backdrop-filter: blur(40px);
       -webkit-backdrop-filter: blur(40px);
-      padding: 40px 24px;
+      padding: 32px 20px;
       border-radius: 32px;
       border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
       width: 100%;
-      max-width: 400px;
+      max-width: 440px;
       animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
+    @media (min-width: 768px) {
+      .setup-container {
+        padding: 48px;
+      }
+    }
     @keyframes slideUp {
-      from { opacity: 0; transform: translateY(40px) scale(0.95); }
+      from { opacity: 0; transform: translateY(30px) scale(0.98); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
     h2 {
       margin-top: 0;
-      font-size: 2.5rem;
-      font-weight: 800;
+      font-size: 1.8rem;
+      font-weight: 900;
       line-height: 1.1;
-      letter-spacing: -0.04em;
-      background: linear-gradient(135deg, #fff 0%, #a5a5a5 100%);
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #fff 0%, #888 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       margin-bottom: 12px;
     }
+    @media (min-width: 480px) {
+      h2 {
+        font-size: 2.2rem;
+      }
+    }
     p {
-      color: #888;
-      margin-bottom: 40px;
-      font-size: 1.05rem;
+      color: #666;
+      margin-bottom: 32px;
+      font-size: 0.95rem;
       line-height: 1.5;
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
     }
     .form-group {
-      margin-bottom: 28px;
+      margin-bottom: 24px;
       text-align: left;
     }
     label {
       display: block;
-      margin-bottom: 10px;
-      font-weight: 600;
-      font-size: 0.75rem;
+      margin-bottom: 8px;
+      font-weight: 700;
+      font-size: 0.65rem;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      color: #aaa;
+      color: #555;
     }
     textarea,
     input[type="text"] {
       width: 100%;
-      padding: 16px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.1);
+      padding: 14px 18px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
       background-color: rgba(0,0,0,0.3);
       color: #fff;
       box-sizing: border-box;
-      font-size: 1rem;
+      font-size: 0.95rem;
       transition: all 0.3s ease;
       font-family: inherit;
     }
@@ -135,17 +148,17 @@ export class InitialSetupScreen extends LitElement {
       outline: none;
       border-color: #ff4e00;
       background-color: rgba(0,0,0,0.5);
-      box-shadow: 0 0 0 4px rgba(255, 78, 0, 0.15);
+      box-shadow: 0 0 0 4px rgba(255, 78, 0, 0.1);
     }
     textarea {
-      min-height: 120px;
+      min-height: 100px;
       resize: none;
     }
     .specific-knob-input {
       display: flex;
       align-items: center;
-      margin-bottom: 12px;
-      gap: 12px;
+      margin-bottom: 10px;
+      gap: 10px;
     }
     .specific-knob-input input[type="text"] {
       flex-grow: 1;
@@ -153,90 +166,97 @@ export class InitialSetupScreen extends LitElement {
     .primary-btn {
       width: 100%;
       padding: 18px;
-      border-radius: 100px;
+      border-radius: 16px;
       border: none;
       background: #fff;
       color: #000;
-      font-size: 1.05rem;
-      font-weight: 700;
-      letter-spacing: -0.01em;
+      font-size: 0.95rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 12px;
-      margin-top: 24px;
-      box-shadow: 0 8px 20px rgba(255,255,255,0.15);
+      margin-top: 16px;
+      box-shadow: 0 8px 24px rgba(255,255,255,0.1);
     }
     .primary-btn:hover:not(:disabled) {
-      transform: translateY(-2px) scale(1.02);
-      box-shadow: 0 12px 24px rgba(255,255,255,0.2);
+      background: #eee;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(255,255,255,0.15);
     }
     .primary-btn:active:not(:disabled) {
-      transform: translateY(0) scale(0.98);
+      transform: translateY(0);
     }
     .primary-btn:disabled {
-      background: #333;
-      color: #666;
+      background: #222;
+      color: #444;
       box-shadow: none;
       cursor: not-allowed;
     }
     .secondary-btn {
       background: transparent;
-      color: #888;
+      color: #555;
       border: none;
       width: 100%;
       padding: 16px;
-      margin-top: 12px;
-      font-size: 0.9rem;
-      font-weight: 600;
+      margin-top: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
       cursor: pointer;
-      transition: color 0.2s;
+      transition: all 0.2s;
     }
     .secondary-btn:hover {
-      color: #fff;
+      color: #888;
     }
     .add-knob-btn {
       background-color: transparent;
       color: #ff4e00;
-      border: 1px dashed rgba(255, 78, 0, 0.5);
-      font-size: 0.9rem;
+      border: 1px dashed rgba(255, 78, 0, 0.3);
+      font-size: 0.8rem;
       padding: 12px;
-      margin-top: 0;
+      margin-top: 4px;
       border-radius: 12px;
       width: 100%;
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
       transition: all 0.2s;
     }
     .add-knob-btn:hover:not(:disabled) {
-      background-color: rgba(255, 78, 0, 0.1);
+      background-color: rgba(255, 78, 0, 0.05);
       border-color: #ff4e00;
     }
     .remove-knob-btn {
       background-color: rgba(255,255,255,0.05);
-      color: #888;
+      color: #555;
       width: 48px;
       height: 48px;
       padding: 0;
       margin: 0;
-      border-radius: 16px;
-      border: none;
-      font-size: 1.2rem;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.05);
+      font-size: 1rem;
       cursor: pointer;
       transition: all 0.2s;
     }
     .remove-knob-btn:hover {
       color: #ff4444;
       background-color: rgba(255, 68, 68, 0.1);
+      border-color: rgba(255, 68, 68, 0.2);
     }
     .loading-spinner {
-      border: 3px solid rgba(0,0,0,0.1);
-      border-top: 3px solid #000;
+      border: 2px solid rgba(0,0,0,0.1);
+      border-top: 2px solid #000;
       border-radius: 50%;
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       animation: spin 0.8s linear infinite;
     }
     @keyframes spin {
@@ -247,19 +267,21 @@ export class InitialSetupScreen extends LitElement {
       float: right;
       color: #ff4e00;
       font-family: var(--mono-font);
+      font-weight: 700;
     }
     small {
       display: block;
       margin-top: 8px;
-      color: #666;
-      font-size: 0.75rem;
+      color: #444;
+      font-size: 0.7rem;
       line-height: 1.4;
+      font-weight: 500;
     }
     input[type="range"] {
       -webkit-appearance: none;
-      height: 4px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 2px;
+      height: 6px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
       padding: 0;
       margin: 16px 0;
       width: 100%;
@@ -269,10 +291,14 @@ export class InitialSetupScreen extends LitElement {
       width: 24px;
       height: 24px;
       background: #fff;
-      border-radius: 50%;
+      border-radius: 8px;
       cursor: pointer;
-      border: 2px solid #000;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+      border: 4px solid #000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.1);
     }
   `;
 
