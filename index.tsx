@@ -277,21 +277,37 @@ class PromptDjMidi extends LitElement {
       background: transparent;
       border: none;
       color: #666;
-      width: 44px;
-      height: 44px;
+      width: auto;
+      min-width: 60px;
+      height: 60px;
       border-radius: 14px;
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      gap: 4px;
       position: relative;
       overflow: hidden;
+      padding: 0 8px;
+    }
+
+    .icon-btn span {
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      opacity: 0.7;
     }
 
     .icon-btn:hover {
       color: #fff;
       background: rgba(255, 255, 255, 0.05);
+    }
+
+    .icon-btn:hover span {
+      opacity: 1;
     }
 
     .icon-btn.active {
@@ -300,17 +316,9 @@ class PromptDjMidi extends LitElement {
       box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
     }
 
-    .icon-btn.active::after {
-      content: '';
-      position: absolute;
-      bottom: 6px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 8px var(--accent);
+    .icon-btn.active span {
+      opacity: 1;
+      color: var(--accent);
     }
 
     .icon-btn.recording {
@@ -330,26 +338,26 @@ class PromptDjMidi extends LitElement {
 
     .play-pause-container {
       position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: calc(max(12px, env(safe-area-inset-bottom)) + 12px);
+      right: 24px;
+      bottom: 100px;
       z-index: 250;
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     @media (min-width: 768px) {
       .play-pause-container {
-        bottom: calc(max(16px, env(safe-area-inset-bottom)) + 16px);
+        right: 40px;
+        bottom: 120px;
       }
     }
     
     play-pause-button {
-      transform: scale(0.9);
+      transform: scale(0.7);
     }
 
     @media (min-width: 768px) {
       play-pause-button {
-        transform: scale(1);
+        transform: scale(0.85);
       }
     }
 
@@ -817,7 +825,7 @@ class PromptDjMidi extends LitElement {
 
     this.setupComplete = true;
     this.setAttribute('data-setup-complete', '');
-    this.connectionStatusMessage = "Setup complete. Ready to connect. Press Play.";
+    this.connectionStatusMessage = "Setup complete. Connecting...";
     
     if (!this.audioContext || this.audioContext.state === 'closed') {
         this.initAudioSystem();
@@ -826,6 +834,13 @@ class PromptDjMidi extends LitElement {
     this.promptWeightHistory = new Map(); 
     this.historyIntervalId = window.setInterval(this.samplePromptWeightsForHistory, HISTORY_SAMPLE_INTERVAL_MS);
     this._updateDevSettingsChangedStatus();
+
+    // Automatically start playback
+    setTimeout(() => {
+      if (this.playbackState === 'stopped') {
+        this.togglePlayPause();
+      }
+    }, 500);
   }
 
   private applyKnobConfiguration(knobGroupsToApply: KnobGroup[]) {
@@ -1665,22 +1680,27 @@ class PromptDjMidi extends LitElement {
       <nav id="bottom-bar">
         <div class="bottom-controls-group">
           <button @click=${() => this.handleMenuToggle('devSettings')} class="icon-btn ${classMap({ active: this.showDevSettings })}" aria-label="Settings">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            <span>Settings</span>
           </button>
           <button @click=${() => this.handleMenuToggle('musicConfig')} class="icon-btn ${classMap({ active: this.showMusicConfig })}" aria-label="Music Config">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            <span>Config</span>
           </button>
         </div>
 
         <div class="bottom-controls-group">
           <button @click=${() => this.handleMenuToggle('presets')} class="icon-btn ${classMap({ active: this.showPresetsPanel })}" aria-label="Presets">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+            <span>Presets</span>
           </button>
           <button @click=${this.toggleMidi} class="icon-btn ${classMap({ active: this.showMidi })}" aria-label="MIDI">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="8" y1="2" x2="8" y2="22"></line><line x1="16" y1="2" x2="16" y2="22"></line><line x1="12" y1="2" x2="12" y2="22"></line></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="8" y1="2" x2="8" y2="22"></line><line x1="16" y1="2" x2="16" y2="22"></line><line x1="12" y1="2" x2="12" y2="22"></line></svg>
+            <span>MIDI</span>
           </button>
           <button @click=${this.toggleRecording} class="icon-btn ${classMap({ recording: this.isRecording })}" aria-label="Record">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
+            <span>${this.isRecording ? 'Stop' : 'Record'}</span>
           </button>
         </div>
       </nav>
@@ -1699,7 +1719,7 @@ class PromptDjMidi extends LitElement {
         <div class="sheet-header">
           <h2 class="sheet-title">Settings</h2>
           <button class="close-btn" @click=${() => this.handleMenuToggle('devSettings')}>
-            <lucide-icon name="x" size="20"></lucide-icon>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
         <div class="sheet-content">
@@ -1724,7 +1744,7 @@ class PromptDjMidi extends LitElement {
             <input type="checkbox" .checked=${this.hapticsEnabled} @change=${(e: any) => this.hapticsEnabled = e.target.checked}>
           </div>
           <button class="primary-btn" style="margin-top: 24px;" @click=${this.regenerateBoard}>
-            <lucide-icon name="refresh-cw" size="18"></lucide-icon>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
             Regenerate Board
           </button>
         </div>
@@ -1734,7 +1754,7 @@ class PromptDjMidi extends LitElement {
         <div class="sheet-header">
           <h2 class="sheet-title">Music Config</h2>
           <button class="close-btn" @click=${() => this.handleMenuToggle('musicConfig')}>
-            <lucide-icon name="x" size="20"></lucide-icon>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
         <div class="sheet-content">
@@ -1791,7 +1811,7 @@ class PromptDjMidi extends LitElement {
                    @input=${(e: Event) => { this.devTemperature = parseFloat((e.target as HTMLInputElement).value); this.musicConfigHaveChanged = true; }}>
           </div>
           <button class="primary-btn" style="margin-top: 24px;" @click=${this.applyMusicConfig} ?disabled=${!this.musicConfigHaveChanged}>
-            <lucide-icon name="check" size="18"></lucide-icon>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             Apply Music Config
           </button>
         </div>
@@ -1801,7 +1821,7 @@ class PromptDjMidi extends LitElement {
         <div class="sheet-header">
           <h2 class="sheet-title">Presets</h2>
           <button class="close-btn" @click=${() => this.handleMenuToggle('presets')}>
-            <lucide-icon name="x" size="20"></lucide-icon>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
         <div class="sheet-content">
@@ -1815,7 +1835,7 @@ class PromptDjMidi extends LitElement {
                 <span class="preset-name">${preset.name}</span>
                 <div class="preset-actions">
                   <button class="del-btn" @click=${(e: Event) => { e.stopPropagation(); this.deletePreset(preset.id!, preset.name); }}>
-                    <lucide-icon name="trash-2" size="14"></lucide-icon>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                   </button>
                 </div>
               </div>
