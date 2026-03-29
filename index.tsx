@@ -726,9 +726,11 @@ class PromptDjMidi extends LitElement {
   @state() private devTemperature = 1.1;
   @state() private devTopK = 40;
   @state() private devSeed = -1;
-  @state() private musicConfigHaveChanged = false;
+  @state() private requiresRestartConfigChanged = false;
+
   private appliedBpm = 120;
   private appliedScale = 'SCALE_UNSPECIFIED';
+  private appliedMusicStyle = '';
 
   @state() private promptWeightHistory: Map<string, Array<{ time: number, weight: number }>> = new Map();
   private historyIntervalId: number | null = null;
@@ -839,6 +841,8 @@ class PromptDjMidi extends LitElement {
     setTimeout(() => {
       if (this.playbackState === 'stopped') {
         this.togglePlayPause();
+      } else if (this.session && this.serverSetupComplete && (this.playbackState === 'playing' || this.playbackState === 'paused')) {
+        this.setSessionPrompts();
       }
     }, 500);
   }
@@ -985,6 +989,7 @@ class PromptDjMidi extends LitElement {
               
               this.appliedBpm = this.devBpm;
               this.appliedScale = this.devScale;
+              this.appliedMusicStyle = this.musicStyle;
 
               await this.setSessionPrompts(); 
 
@@ -1101,7 +1106,7 @@ class PromptDjMidi extends LitElement {
     }
 
     let promptsToSend = Array.from(this.prompts.values()).map(p => ({
-      text: p.text,
+      text: this.musicStyle.trim() !== '' ? `${this.musicStyle.trim()}, ${p.text}` : p.text,
       weight: p.weight,
     }));
 
@@ -1344,7 +1349,7 @@ class PromptDjMidi extends LitElement {
       const proceed = await this.showConfirm("You have unsaved Settings. Close without applying?");
       if (!proceed) return;
     }
-    if (this.showMusicConfig && targetMenu !== 'musicConfig' && this.musicConfigHaveChanged) {
+    if (this.showMusicConfig && targetMenu !== 'musicConfig' && this.requiresRestartConfigChanged) {
       const proceed = await this.showConfirm("You have unsaved Music Config. Close without applying?");
       if (!proceed) return;
     }
@@ -1357,7 +1362,7 @@ class PromptDjMidi extends LitElement {
       this.showDevSettings = !this.showDevSettings;
       if (this.showDevSettings) { this.showMusicConfig = false; this.showPresetsPanel = false; }
     } else if (targetMenu === 'musicConfig') {
-      if (this.showMusicConfig && this.musicConfigHaveChanged) {
+      if (this.showMusicConfig && this.requiresRestartConfigChanged) {
          const proceed = await this.showConfirm("You have unsaved Music Config. Close without applying?");
          if (!proceed) return;
       }
@@ -1384,7 +1389,41 @@ class PromptDjMidi extends LitElement {
     // so the state should be up-to-date.
   }
 
+  private applyInstantMusicConfig = throttle(async () => {
+    if (!this.session || this.connectionError) return;
+
+    try {
+      const config: any = {
+        guidance: this.devGuidance,
+        bpm: this.appliedBpm, // Use applied BPM to avoid triggering restart
+        density: this.devDensity,
+        brightness: this.devBrightness,
+        muteBass: this.devMuteBass,
+        muteDrums: this.devMuteDrums,
+        onlyBassAndDrums: this.devOnlyBassAndDrums,
+        musicGenerationMode: this.devMusicGenerationMode,
+        temperature: this.devTemperature,
+        topK: this.devTopK,
+      };
+
+      if (this.appliedScale !== 'SCALE_UNSPECIFIED') {
+        config.scale = this.appliedScale;
+      }
+
+      if (this.devSeed !== -1) {
+        config.seed = this.devSeed;
+      }
+
+      await this.session.setMusicGenerationConfig({
+        musicGenerationConfig: config
+      });
+    } catch (e) {
+      console.error("[Lyria Debug] Error applying instant music config:", e);
+    }
+  }, 200);
+
   private async applyMusicConfig() {
+
     if (!this.session || this.connectionError) {
       this.toastMessage?.show?.("Cannot apply music config without an active session.");
       return;
@@ -1417,14 +1456,17 @@ class PromptDjMidi extends LitElement {
         musicGenerationConfig: config
       });
 
-      if (this.devBpm !== this.appliedBpm || this.devScale !== this.appliedScale) {
-        console.log("[Lyria Debug] Resetting context for new BPM or Scale...");
+      if (this.devBpm !== this.appliedBpm || this.devScale !== this.appliedScale || this.musicStyle !== this.appliedMusicStyle) {
+        console.log("[Lyria Debug] Resetting context for new BPM, Scale, or Style...");
         await this.session.resetContext();
         this.appliedBpm = this.devBpm;
         this.appliedScale = this.devScale;
+        this.appliedMusicStyle = this.musicStyle;
       }
       
-      this.musicConfigHaveChanged = false;
+      await this.setSessionPrompts();
+
+      this.requiresRestartConfigChanged = false;
       this.toastMessage?.show?.("Music configuration applied successfully.");
     } catch (e: any) {
       console.error("[Lyria Debug] Error applying music config:", e);
@@ -1725,7 +1767,7 @@ class PromptDjMidi extends LitElement {
         <div class="sheet-content">
           <div class="dev-setting-row">
             <label>MIDI Input</label>
-            <select @change=${(e: any) => this.activeMidiInputId = e.target.value}>
+            <select @change=${(e: any) => { this.activeMidiInputId = e.target.value; this.midiDispatcher.activeMidiInputId = e.target.value; }}>
               <option value="">None</option>
               ${this.midiInputIds.map(id => html`
                 <option value=${id} ?selected=${this.activeMidiInputId === id}>${id}</option>
@@ -1734,7 +1776,7 @@ class PromptDjMidi extends LitElement {
           </div>
           <div class="dev-setting-row">
             <label>Gemini Model</label>
-            <select @change=${(e: any) => this.devModelName = e.target.value}>
+            <select @change=${(e: any) => { this.devModelName = e.target.value; this._updateDevSettingsChangedStatus(); }}>
               <option value="gemini-3-flash-preview" ?selected=${this.devModelName === 'gemini-3-flash-preview'}>Gemini 3 Flash</option>
               <option value="gemini-3.1-pro-preview" ?selected=${this.devModelName === 'gemini-3.1-pro-preview'}>Gemini 3.1 Pro</option>
             </select>
@@ -1743,7 +1785,11 @@ class PromptDjMidi extends LitElement {
             <label style="margin: 0;">Haptic Feedback</label>
             <input type="checkbox" .checked=${this.hapticsEnabled} @change=${(e: any) => this.hapticsEnabled = e.target.checked}>
           </div>
-          <button class="primary-btn" style="margin-top: 24px;" @click=${this.regenerateBoard}>
+          <button class="primary-btn" style="margin-top: 24px;" @click=${this.applyDevSettings} ?disabled=${!this.devSettingsHaveChanged}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Apply Settings & Restart
+          </button>
+          <button class="primary-btn" style="margin-top: 12px; background: var(--surface-light); color: var(--text-primary);" @click=${this.regenerateBoard}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
             Regenerate Board
           </button>
@@ -1758,61 +1804,69 @@ class PromptDjMidi extends LitElement {
           </button>
         </div>
         <div class="sheet-content">
-          <div class="dev-setting-row">
-            <label>Music Style</label>
-            <textarea style="min-height: 80px; resize: none;" @input=${(e: any) => { this.musicStyle = e.target.value; this.musicConfigHaveChanged = true; }}>${this.musicStyle}</textarea>
+          <div style="margin-bottom: 24px;">
+            <h3 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 12px;">Instant Adjustments</h3>
+            <div class="dev-setting-row">
+              <label>Density <span style="float: right; color: var(--accent);">${this.devDensity.toFixed(2)}</span></label>
+              <input type="range" min="0" max="1" step="0.05" .value=${this.devDensity.toString()} 
+                     @input=${(e: Event) => { this.devDensity = parseFloat((e.target as HTMLInputElement).value); this.applyInstantMusicConfig(); }}>
+            </div>
+            <div class="dev-setting-row">
+              <label>Brightness <span style="float: right; color: var(--accent);">${this.devBrightness.toFixed(2)}</span></label>
+              <input type="range" min="0" max="1" step="0.05" .value=${this.devBrightness.toString()} 
+                     @input=${(e: Event) => { this.devBrightness = parseFloat((e.target as HTMLInputElement).value); this.applyInstantMusicConfig(); }}>
+            </div>
+            <div class="dev-setting-row" style="flex-direction: row; align-items: center; justify-content: space-between;">
+              <label style="margin: 0;">Mute Bass</label>
+              <input type="checkbox" .checked=${this.devMuteBass} 
+                     @change=${(e: Event) => { this.devMuteBass = (e.target as HTMLInputElement).checked; this.applyInstantMusicConfig(); }}>
+            </div>
+            <div class="dev-setting-row" style="flex-direction: row; align-items: center; justify-content: space-between;">
+              <label style="margin: 0;">Mute Drums</label>
+              <input type="checkbox" .checked=${this.devMuteDrums} 
+                     @change=${(e: Event) => { this.devMuteDrums = (e.target as HTMLInputElement).checked; this.applyInstantMusicConfig(); }}>
+            </div>
+            <div class="dev-setting-row">
+              <label>Temperature <span style="float: right; color: var(--accent);">${this.devTemperature.toFixed(1)}</span></label>
+              <input type="range" min="0" max="3" step="0.1" .value=${this.devTemperature.toString()} 
+                     @input=${(e: Event) => { this.devTemperature = parseFloat((e.target as HTMLInputElement).value); this.applyInstantMusicConfig(); }}>
+            </div>
           </div>
-          <div class="dev-setting-row">
-            <label>BPM (60-200)</label>
-            <input type="number" min="60" max="200" step="1" .value=${this.devBpm.toString()} 
-                   @input=${(e: Event) => { this.devBpm = parseInt((e.target as HTMLInputElement).value); this.musicConfigHaveChanged = true; }}>
+
+          <div style="margin-bottom: 12px;">
+            <h3 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 12px;">Requires Restart</h3>
+            <div class="dev-setting-row">
+              <label>Music Style</label>
+              <textarea style="min-height: 80px; resize: none;" @input=${(e: any) => { this.musicStyle = e.target.value; this.requiresRestartConfigChanged = true; }}>${this.musicStyle}</textarea>
+            </div>
+            <div class="dev-setting-row">
+              <label>BPM (60-200)</label>
+              <input type="number" min="60" max="200" step="1" .value=${this.devBpm.toString()} 
+                     @input=${(e: Event) => { this.devBpm = parseInt((e.target as HTMLInputElement).value); this.requiresRestartConfigChanged = true; }}>
+            </div>
+            <div class="dev-setting-row">
+              <label>Scale</label>
+              <select @change=${(e: Event) => { this.devScale = (e.target as HTMLSelectElement).value; this.requiresRestartConfigChanged = true; }}>
+                <option value="SCALE_UNSPECIFIED" ?selected=${this.devScale === 'SCALE_UNSPECIFIED'}>Unspecified</option>
+                <option value="C_MAJOR_A_MINOR" ?selected=${this.devScale === 'C_MAJOR_A_MINOR'}>C Major / A Minor</option>
+                <option value="D_FLAT_MAJOR_B_FLAT_MINOR" ?selected=${this.devScale === 'D_FLAT_MAJOR_B_FLAT_MINOR'}>Db Major / Bb Minor</option>
+                <option value="D_MAJOR_B_MINOR" ?selected=${this.devScale === 'D_MAJOR_B_MINOR'}>D Major / B Minor</option>
+                <option value="E_FLAT_MAJOR_C_MINOR" ?selected=${this.devScale === 'E_FLAT_MAJOR_C_MINOR'}>Eb Major / C Minor</option>
+                <option value="E_MAJOR_D_FLAT_MINOR" ?selected=${this.devScale === 'E_MAJOR_D_FLAT_MINOR'}>E Major / Db Minor</option>
+                <option value="F_MAJOR_D_MINOR" ?selected=${this.devScale === 'F_MAJOR_D_MINOR'}>F Major / D Minor</option>
+                <option value="G_FLAT_MAJOR_E_FLAT_MINOR" ?selected=${this.devScale === 'G_FLAT_MAJOR_E_FLAT_MINOR'}>Gb Major / Eb Minor</option>
+                <option value="G_MAJOR_E_MINOR" ?selected=${this.devScale === 'G_MAJOR_E_MINOR'}>G Major / E Minor</option>
+                <option value="A_FLAT_MAJOR_F_MINOR" ?selected=${this.devScale === 'A_FLAT_MAJOR_F_MINOR'}>Ab Major / F Minor</option>
+                <option value="A_MAJOR_G_FLAT_MINOR" ?selected=${this.devScale === 'A_MAJOR_G_FLAT_MINOR'}>A Major / Gb Minor</option>
+                <option value="B_FLAT_MAJOR_G_MINOR" ?selected=${this.devScale === 'B_FLAT_MAJOR_G_MINOR'}>Bb Major / G Minor</option>
+                <option value="B_MAJOR_A_FLAT_MINOR" ?selected=${this.devScale === 'B_MAJOR_A_FLAT_MINOR'}>B Major / Ab Minor</option>
+              </select>
+            </div>
           </div>
-          <div class="dev-setting-row">
-            <label>Density <span style="float: right; color: var(--accent);">${this.devDensity.toFixed(2)}</span></label>
-            <input type="range" min="0" max="1" step="0.05" .value=${this.devDensity.toString()} 
-                   @input=${(e: Event) => { this.devDensity = parseFloat((e.target as HTMLInputElement).value); this.musicConfigHaveChanged = true; }}>
-          </div>
-          <div class="dev-setting-row">
-            <label>Brightness <span style="float: right; color: var(--accent);">${this.devBrightness.toFixed(2)}</span></label>
-            <input type="range" min="0" max="1" step="0.05" .value=${this.devBrightness.toString()} 
-                   @input=${(e: Event) => { this.devBrightness = parseFloat((e.target as HTMLInputElement).value); this.musicConfigHaveChanged = true; }}>
-          </div>
-          <div class="dev-setting-row">
-            <label>Scale</label>
-            <select @change=${(e: Event) => { this.devScale = (e.target as HTMLSelectElement).value; this.musicConfigHaveChanged = true; }}>
-              <option value="SCALE_UNSPECIFIED" ?selected=${this.devScale === 'SCALE_UNSPECIFIED'}>Unspecified</option>
-              <option value="C_MAJOR_A_MINOR" ?selected=${this.devScale === 'C_MAJOR_A_MINOR'}>C Major / A Minor</option>
-              <option value="D_FLAT_MAJOR_B_FLAT_MINOR" ?selected=${this.devScale === 'D_FLAT_MAJOR_B_FLAT_MINOR'}>Db Major / Bb Minor</option>
-              <option value="D_MAJOR_B_MINOR" ?selected=${this.devScale === 'D_MAJOR_B_MINOR'}>D Major / B Minor</option>
-              <option value="E_FLAT_MAJOR_C_MINOR" ?selected=${this.devScale === 'E_FLAT_MAJOR_C_MINOR'}>Eb Major / C Minor</option>
-              <option value="E_MAJOR_D_FLAT_MINOR" ?selected=${this.devScale === 'E_MAJOR_D_FLAT_MINOR'}>E Major / Db Minor</option>
-              <option value="F_MAJOR_D_MINOR" ?selected=${this.devScale === 'F_MAJOR_D_MINOR'}>F Major / D Minor</option>
-              <option value="G_FLAT_MAJOR_E_FLAT_MINOR" ?selected=${this.devScale === 'G_FLAT_MAJOR_E_FLAT_MINOR'}>Gb Major / Eb Minor</option>
-              <option value="G_MAJOR_E_MINOR" ?selected=${this.devScale === 'G_MAJOR_E_MINOR'}>G Major / E Minor</option>
-              <option value="A_FLAT_MAJOR_F_MINOR" ?selected=${this.devScale === 'A_FLAT_MAJOR_F_MINOR'}>Ab Major / F Minor</option>
-              <option value="A_MAJOR_G_FLAT_MINOR" ?selected=${this.devScale === 'A_MAJOR_G_FLAT_MINOR'}>A Major / Gb Minor</option>
-              <option value="B_FLAT_MAJOR_G_MINOR" ?selected=${this.devScale === 'B_FLAT_MAJOR_G_MINOR'}>Bb Major / G Minor</option>
-              <option value="B_MAJOR_A_FLAT_MINOR" ?selected=${this.devScale === 'B_MAJOR_A_FLAT_MINOR'}>B Major / Ab Minor</option>
-            </select>
-          </div>
-          <div class="dev-setting-row" style="flex-direction: row; align-items: center; justify-content: space-between;">
-            <label style="margin: 0;">Mute Bass</label>
-            <input type="checkbox" .checked=${this.devMuteBass} 
-                   @change=${(e: Event) => { this.devMuteBass = (e.target as HTMLInputElement).checked; this.musicConfigHaveChanged = true; }}>
-          </div>
-          <div class="dev-setting-row" style="flex-direction: row; align-items: center; justify-content: space-between;">
-            <label style="margin: 0;">Mute Drums</label>
-            <input type="checkbox" .checked=${this.devMuteDrums} 
-                   @change=${(e: Event) => { this.devMuteDrums = (e.target as HTMLInputElement).checked; this.musicConfigHaveChanged = true; }}>
-          </div>
-          <div class="dev-setting-row">
-            <label>Temperature <span style="float: right; color: var(--accent);">${this.devTemperature.toFixed(1)}</span></label>
-            <input type="range" min="0" max="3" step="0.1" .value=${this.devTemperature.toString()} 
-                   @input=${(e: Event) => { this.devTemperature = parseFloat((e.target as HTMLInputElement).value); this.musicConfigHaveChanged = true; }}>
-          </div>
-          <button class="primary-btn" style="margin-top: 24px;" @click=${this.applyMusicConfig} ?disabled=${!this.musicConfigHaveChanged}>
+          
+          <button class="primary-btn" style="margin-top: 12px;" @click=${this.applyMusicConfig} ?disabled=${!this.requiresRestartConfigChanged}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            Apply Music Config
+            Apply & Restart Context
           </button>
         </div>
       </div>
