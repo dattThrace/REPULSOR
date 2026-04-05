@@ -9,16 +9,20 @@ import { classMap } from 'lit/directives/class-map.js';
 @customElement('toast-message')
 export class ToastMessage extends LitElement {
   static override styles = css`
+    * {
+      box-sizing: border-box;
+    }
     .toast {
       line-height: 1.6;
       position: fixed;
       top: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background-color: #000;
+      background-color: #111;
       color: white;
-      padding: 15px;
-      border-radius: 5px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: 1px solid #333;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -26,13 +30,26 @@ export class ToastMessage extends LitElement {
       min-width: 200px;
       max-width: 80vw;
       transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      z-index: 9999;
     }
     button {
-      border-radius: 100px;
-      aspect-ratio: 1;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
       border: none;
-      color: #000;
+      background: transparent;
+      color: #888;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+    }
+    button:hover {
+      color: #fff;
     }
     .toast:not(.showing) {
       transition-duration: 1s;

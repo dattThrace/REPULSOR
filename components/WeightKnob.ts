@@ -17,6 +17,9 @@ const HALO_LEVEL_MODIFIER = 1;
 @customElement('weight-knob')
 export class WeightKnob extends LitElement {
   static override styles = css`
+    * {
+      box-sizing: border-box;
+    }
     :host {
       cursor: grab;
       position: relative;

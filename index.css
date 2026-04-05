@@ -18,6 +18,9 @@ html, body {
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
+* {
+  box-sizing: border-box;
+}
 body {
   overflow-y: auto; /* Allow main page scroll */
 }

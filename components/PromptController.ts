@@ -14,6 +14,9 @@ import type { Prompt, ControlChange } from '../types';
 @customElement('prompt-controller')
 export class PromptController extends LitElement {
   static override styles = css`
+    * {
+      box-sizing: border-box;
+    }
     .prompt {
       width: 100%;
       display: flex;

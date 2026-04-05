@@ -16,6 +16,9 @@ const FONT_SIZE = 9;
 @customElement('weight-history-graph')
 export class WeightHistoryGraph extends LitElement {
   static override styles = css`
+    * {
+      box-sizing: border-box;
+    }
     :host {
       display: block;
       width: 100%;
@@ -65,11 +68,33 @@ export class WeightHistoryGraph extends LitElement {
     }
     this.ctx = context;
     this.resizeCanvas(); 
+    
+    this.canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
+
     if (this.active) {
       this.startDrawingLoop();
     } else {
       this.drawGraph(); // Draw once in inactive state with overlay
     }
+  }
+
+  private handleCanvasClick(e: MouseEvent) {
+    if (!this.active || !this.canvas) return;
+    
+    const rect = this.canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const width = rect.width;
+    
+    // Calculate the time corresponding to the click
+    const now = this.lastDrawTime;
+    const startTime = now - this.historyDurationMs;
+    const clickedTime = startTime + (x / width) * this.historyDurationMs;
+    
+    this.dispatchEvent(new CustomEvent('history-click', {
+      detail: { time: clickedTime },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   override disconnectedCallback() {
@@ -141,7 +166,8 @@ export class WeightHistoryGraph extends LitElement {
     }
 
 
-    const { width, height } = this.canvas.getBoundingClientRect(); 
+    const width = this.canvas.width / window.devicePixelRatio;
+    const height = this.canvas.height / window.devicePixelRatio;
     this.ctx.clearRect(0, 0, width, height);
 
     const now = this.active ? Date.now() : this.lastDrawTime;
@@ -155,13 +181,13 @@ export class WeightHistoryGraph extends LitElement {
     this.ctx.font = `${FONT_SIZE}px sans-serif`;
 
     const weightIntervals = [0, 0.5, 1.0, 1.5, MAX_WEIGHT_VALUE];
+    this.ctx.font = `${FONT_SIZE}px "JetBrains Mono", monospace`;
     weightIntervals.forEach(val => {
       const y = height - (val / MAX_WEIGHT_VALUE) * height;
       this.ctx.beginPath();
       this.ctx.moveTo(0, y);
       this.ctx.lineTo(width, y);
       this.ctx.stroke();
-      this.ctx.font = `${FONT_SIZE}px "JetBrains Mono", monospace`;
       this.ctx.fillText(val.toFixed(1), 2, y - 2 > FONT_SIZE ? y - 2 : y + FONT_SIZE);
     });
 
@@ -172,11 +198,15 @@ export class WeightHistoryGraph extends LitElement {
       this.ctx.moveTo(x, 0);
       this.ctx.lineTo(x, height);
       this.ctx.stroke();
+      
       const timeLabelVal = ((numTimeIntervals - i) * (this.historyDurationMs / 1000 / numTimeIntervals));
       const timeLabel = timeLabelVal > 0 ? `-${timeLabelVal.toFixed(0)}s` : 'NOW';
       this.ctx.font = `${FONT_SIZE}px "JetBrains Mono", monospace`;
-      const textMetrics = this.ctx.measureText(timeLabel);
-      const textWidth = textMetrics.width;
+      
+      // Optimization: Cache text width if possible, but for now just use a simpler alignment
+      // or pre-calculate outside the loop if labels are static.
+      // Since historyDurationMs can change, we'll keep it here but minimize work.
+      const textWidth = this.ctx.measureText(timeLabel).width;
       let textX = x - textWidth / 2;
       if (i === 0) textX = x + 2; // Left align first label
       if (i === numTimeIntervals) textX = x - textWidth - 2; // Right align last label

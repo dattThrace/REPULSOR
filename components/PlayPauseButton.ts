@@ -12,6 +12,9 @@ export class PlayPauseButton extends LitElement {
   @property({ type: String }) playbackState: PlaybackState = 'stopped';
 
   static override styles = css`
+    * {
+      box-sizing: border-box;
+    }
     :host {
       position: relative;
       display: flex;
@@ -30,7 +33,7 @@ export class PlayPauseButton extends LitElement {
       pointer-events: none;
     }
     :host([playbackState="playing"]) svg {
-      filter: drop-shadow(0 0 20px rgba(255, 78, 0, 0.4));
+      filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.4));
     }
     .loader {
       stroke: #ffffff;
@@ -147,7 +150,7 @@ export class PlayPauseButton extends LitElement {
   private renderPause() {
     return svg`<path
       d="M75.0037 69V39H83.7537V69H75.0037ZM56.2537 69V39H65.0037V69H56.2537Z"
-      fill="#ff4e00"
+      fill="#ffffff"
     />`;
   }
 

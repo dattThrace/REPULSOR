@@ -56,6 +56,9 @@ interface SpecificKnobInput {
 @customElement('initial-setup-screen')
 export class InitialSetupScreen extends LitElement {
   static override styles = css`
+    * {
+      box-sizing: border-box;
+    }
     :host {
       display: flex;
       flex-direction: column;
@@ -63,7 +66,7 @@ export class InitialSetupScreen extends LitElement {
       justify-content: center;
       min-height: 100%;
       width: 100%;
-      background: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #050505 100%);
+      background: #000;
       color: #fff;
       padding: 16px;
       box-sizing: border-box;
@@ -72,13 +75,10 @@ export class InitialSetupScreen extends LitElement {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
     .setup-container {
-      background: rgba(255, 255, 255, 0.02);
-      backdrop-filter: blur(40px);
-      -webkit-backdrop-filter: blur(40px);
+      background: #111;
       padding: 32px 20px;
-      border-radius: 32px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+      border-radius: 16px;
+      border: 1px solid #333;
       width: 100%;
       max-width: 440px;
       animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
@@ -134,21 +134,20 @@ export class InitialSetupScreen extends LitElement {
     input[type="text"] {
       width: 100%;
       padding: 14px 18px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background-color: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      border: 1px solid #333;
+      background-color: #000;
       color: #fff;
       box-sizing: border-box;
       font-size: 0.95rem;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
       font-family: inherit;
     }
     textarea:focus,
     input[type="text"]:focus {
       outline: none;
-      border-color: #ff4e00;
-      background-color: rgba(0,0,0,0.5);
-      box-shadow: 0 0 0 4px rgba(255, 78, 0, 0.1);
+      border-color: #fff;
+      background-color: #111;
     }
     textarea {
       min-height: 100px;
@@ -165,36 +164,32 @@ export class InitialSetupScreen extends LitElement {
     }
     .primary-btn {
       width: 100%;
-      padding: 18px;
-      border-radius: 16px;
-      border: none;
+      padding: 14px 18px;
+      border-radius: 8px;
+      border: 1px solid #fff;
       background: #fff;
       color: #000;
       font-size: 0.95rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.2s ease;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 12px;
       margin-top: 16px;
-      box-shadow: 0 8px 24px rgba(255,255,255,0.1);
     }
     .primary-btn:hover:not(:disabled) {
-      background: #eee;
-      transform: translateY(-2px);
-      box-shadow: 0 12px 32px rgba(255,255,255,0.15);
+      background: #000;
+      color: #fff;
     }
     .primary-btn:active:not(:disabled) {
-      transform: translateY(0);
+      transform: translateY(1px);
     }
     .primary-btn:disabled {
       background: #222;
-      color: #444;
-      box-shadow: none;
+      border-color: #222;
+      color: #555;
       cursor: not-allowed;
     }
     .secondary-btn {
@@ -216,40 +211,40 @@ export class InitialSetupScreen extends LitElement {
     }
     .add-knob-btn {
       background-color: transparent;
-      color: #ff4e00;
-      border: 1px dashed rgba(255, 78, 0, 0.3);
+      color: #fff;
+      border: 1px dashed #333;
       font-size: 0.8rem;
       padding: 12px;
       margin-top: 4px;
-      border-radius: 12px;
+      border-radius: 8px;
       width: 100%;
       cursor: pointer;
-      font-weight: 700;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       transition: all 0.2s;
     }
     .add-knob-btn:hover:not(:disabled) {
-      background-color: rgba(255, 78, 0, 0.05);
-      border-color: #ff4e00;
+      background-color: #111;
+      border-color: #fff;
     }
     .remove-knob-btn {
-      background-color: rgba(255,255,255,0.05);
+      background-color: #111;
       color: #555;
       width: 48px;
       height: 48px;
       padding: 0;
       margin: 0;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 8px;
+      border: 1px solid #333;
       font-size: 1rem;
       cursor: pointer;
       transition: all 0.2s;
     }
     .remove-knob-btn:hover {
-      color: #ff4444;
-      background-color: rgba(255, 68, 68, 0.1);
-      border-color: rgba(255, 68, 68, 0.2);
+      color: #fff;
+      background-color: #222;
+      border-color: #555;
     }
     .loading-spinner {
       border: 2px solid rgba(0,0,0,0.1);
@@ -265,40 +260,39 @@ export class InitialSetupScreen extends LitElement {
     }
     .creativity-value {
       float: right;
-      color: #ff4e00;
+      color: #fff;
       font-family: var(--mono-font);
       font-weight: 700;
     }
     small {
       display: block;
       margin-top: 8px;
-      color: #444;
+      color: #666;
       font-size: 0.7rem;
       line-height: 1.4;
       font-weight: 500;
     }
     input[type="range"] {
       -webkit-appearance: none;
-      height: 6px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 10px;
+      height: 4px;
+      background: #333;
+      border-radius: 2px;
       padding: 0;
       margin: 16px 0;
       width: 100%;
     }
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 24px;
-      height: 24px;
+      width: 16px;
+      height: 16px;
       background: #fff;
-      border-radius: 8px;
+      border-radius: 50%;
       cursor: pointer;
-      border: 4px solid #000;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      border: none;
       transition: transform 0.2s;
     }
     input[type="range"]::-webkit-slider-thumb:hover {
-      transform: scale(1.1);
+      transform: scale(1.2);
     }
   `;
 
