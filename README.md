@@ -76,16 +76,14 @@ The backend provides the following endpoints for preset management:
 - `POST /api/presets`: Save a new preset.
 - `DELETE /api/presets/:id`: Delete a preset.
 
-## ☁️ Deployment (Vercel)
+## ☁️ Deployment (Render)
 
-To deploy this application to Vercel:
+To deploy this application to Render:
 
-1. **Database Consideration**: This app uses `better-sqlite3` which stores data in a local file (`presets.db`). Vercel's serverless environment has a read-only filesystem. For persistent presets in production, you should:
-    - Switch to a hosted database like **PostgreSQL** (Vercel Postgres) or **MongoDB**.
-    - Or, use a persistent disk solution if deploying to a VPS or container service (like Google Cloud Run).
-2. **Environment Variables**: Add `API_KEY` to your Vercel project settings.
-3. **Build Command**: `npm run build`
-4. **Output Directory**: `dist` (for the frontend)
+1. **Connect Repository**: Connect your GitHub/GitLab repository to Render.
+2. **Blueprint Setup**: This repository includes a `render.yaml` blueprint file. Render will automatically detect it and configure a Web Service with a persistent disk for your SQLite database.
+3. **Environment Variables**: In the Render dashboard, ensure you add your `GEMINI_API_KEY` to the environment variables for the Web Service.
+4. **Persistent Data**: The `render.yaml` automatically provisions a 1GB persistent disk mounted at `/data` to ensure your `presets.db` SQLite database is not lost between deployments.
 
 ## 🤝 Contributing
 

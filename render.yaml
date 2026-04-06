@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: repulsor
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: RENDER_DISK_PATH
+        value: /data
+      - key: PORT
+        value: 3000
+    disk:
+      name: sqlite-data
+      mountPath: /data
+      sizeGB: 1
