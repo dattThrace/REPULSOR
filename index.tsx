@@ -313,7 +313,7 @@ class PromptDjMidi extends LitElement {
       .app-layout {
         display: flex;
         flex-direction: column;
-        overflow-y: auto;
+        overflow-y: hidden;
         width: 100%;
       }
       .sidebar {
@@ -335,29 +335,54 @@ class PromptDjMidi extends LitElement {
         border-radius: 0;
         border-bottom: 1px solid var(--glass-border);
         gap: 8px;
+        z-index: 1001;
       }
       .main-content {
         order: 3;
-        overflow-y: visible;
+        overflow-y: auto;
         min-height: auto;
         width: 100%;
+        flex-grow: 1;
       }
       #main-stage {
         padding: 16px;
         width: 100%;
       }
+      .mobile-settings-btn {
+        display: flex !important;
+      }
       .sidebar-sections {
-        order: 4;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 80vh;
         background: var(--panel-bg);
         padding: 24px 16px;
         display: flex;
         flex-direction: column;
         gap: 32px;
+        border-radius: 24px 24px 0 0;
         border-top: 1px solid var(--glass-border);
+        box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+        z-index: 1000;
+        overflow-y: auto;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .sidebar-sections.open {
+        transform: translateY(0);
       }
       .icon-btn {
         height: 48px;
       }
+    }
+
+    .mobile-settings-btn {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
       .knob-group {
         padding: 16px;
       }
@@ -583,6 +608,11 @@ class PromptDjMidi extends LitElement {
   private nextStartTime = 0;
 
   @state() private showMidi = false;
+  @state() private showMobileSettings = false;
+
+  private toggleMobileSettings() {
+    this.showMobileSettings = !this.showMobileSettings;
+  }
   @state() private audioLevel = 0;
   @state() private midiInputIds: string[] = [];
   @state() private activeMidiInputId: string | null = null;
@@ -597,8 +627,6 @@ class PromptDjMidi extends LitElement {
   @query('toast-message') private toastMessage!: ToastMessage;
   @query('weight-history-graph') private weightHistoryGraph!: WeightHistoryGraph;
 
-  @state() private devModelName = DEFAULT_MODEL_NAME;
-  @state() private activeModelNameInSession: string = DEFAULT_MODEL_NAME;
   @state() private devClientBufferTime = DEFAULT_CLIENT_BUFFER_TIME;
   @state() private devAudioContextSampleRate = DEFAULT_SAMPLE_RATE;
   @state() private devNumDecodingChannels = DEFAULT_NUM_CHANNELS;
@@ -649,7 +677,7 @@ class PromptDjMidi extends LitElement {
   }
 
   private _updateDevSettingsChangedStatus() {
-    const modelChanged = this.devModelName !== this.activeModelNameInSession;
+    const modelChanged = false;
     
     let sampleRateChanged = false;
     const isActiveContextValid = this.audioContext && this.audioContext.state !== 'closed';
@@ -815,8 +843,8 @@ class PromptDjMidi extends LitElement {
     }
     
     this.serverSetupComplete = false; 
-    this.connectionStatusMessage = `Connecting to model: ${this.devModelName}...`;
-    console.log(`[Lyria Debug] Connecting to model: ${this.devModelName}`);
+    this.connectionStatusMessage = `Connecting to model: ${DEFAULT_MODEL_NAME}...`;
+    console.log(`[Lyria Debug] Connecting to model: ${DEFAULT_MODEL_NAME}`);
     
     if (!ai.live || !ai.live.music) {
       console.error("[Lyria Debug] ai.live.music is not available in the SDK.");
@@ -830,7 +858,7 @@ class PromptDjMidi extends LitElement {
 
     try {
       this.session = await ai.live.music.connect({
-        model: this.devModelName,
+        model: DEFAULT_MODEL_NAME,
         callbacks: {
           onmessage: async (e: LiveMusicServerMessage) => {
             console.log(`[Lyria Debug] Received message from server:`, e);
@@ -838,7 +866,6 @@ class PromptDjMidi extends LitElement {
               console.log(`[Lyria Debug] Server setup complete.`);
               this.connectionError = false;
               this.serverSetupComplete = true;
-              this.activeModelNameInSession = this.devModelName; 
               this.connectionStatusMessage = "Session setup complete. Sending initial prompts...";
               this._updateDevSettingsChangedStatus();
 
@@ -1258,7 +1285,6 @@ class PromptDjMidi extends LitElement {
   }
 
   private discardDevSettings() {
-    this.devModelName = this.activeModelNameInSession;
     this._updateDevSettingsChangedStatus();
     this.toastMessage?.show?.("Settings changes discarded.");
   }
@@ -1279,7 +1305,7 @@ class PromptDjMidi extends LitElement {
 
     this.toastMessage?.show?.("Applying developer settings. Session will restart...");
     await this.stop(); // Stops session, re-initializes audio context with new sample rate
-    await this.play(); // Attempts to reconnect with the new devModelName
+    await this.play(); // Attempts to reconnect
     
     // After attempting to play (which includes connect), update status.
     // this._updateDevSettingsChangedStatus() is called within stop() and connectToSession()
@@ -1372,10 +1398,9 @@ class PromptDjMidi extends LitElement {
   }
   
   private async savePreset() {
-    const name = this.presetNameInput.value.trim();
+    let name = this.presetNameInput.value.trim();
     if (!name) {
-      this.toastMessage?.show?.("Please enter a name for the preset.");
-      return;
+      name = `Preset ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
     }
 
     // Save the structured displayKnobGroups
@@ -1594,9 +1619,13 @@ class PromptDjMidi extends LitElement {
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="8" y1="2" x2="8" y2="22"></line><line x1="16" y1="2" x2="16" y2="22"></line><line x1="12" y1="2" x2="12" y2="22"></line></svg>
               <span>MIDI</span>
             </button>
+            <button @click=${this.toggleMobileSettings} class="icon-btn mobile-settings-btn ${classMap({ active: this.showMobileSettings })}" aria-label="Settings">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <span>Setup</span>
+            </button>
           </div>
 
-          <div class="sidebar-sections">
+          <div class="sidebar-sections ${classMap({ open: this.showMobileSettings })}">
             <section class="sidebar-section">
               <h2 class="sidebar-title">Music Config</h2>
             <div style="margin-bottom: 24px;">
@@ -1631,12 +1660,12 @@ class PromptDjMidi extends LitElement {
             <div style="margin-bottom: 12px;">
               <h3 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 12px;">Requires Restart</h3>
               <div class="dev-setting-row ${classMap({ changed: this.musicStyle !== this.appliedMusicStyle })}">
-                <label>Music Style</label>
-                <textarea style="min-height: 80px; resize: none; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 14px; color: #fff; font-family: var(--mono-font); font-size: 0.95rem; width: 100%; box-sizing: border-box;" @input=${(e: any) => { this.musicStyle = e.target.value; this.requiresRestartConfigChanged = true; }}>${this.musicStyle}</textarea>
+                <label>Music Style (Read-Only)</label>
+                <textarea readonly style="min-height: 80px; resize: none; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 14px; color: #aaa; font-family: var(--mono-font); font-size: 0.95rem; width: 100%; box-sizing: border-box;" @input=${(e: any) => { this.musicStyle = e.target.value; this.requiresRestartConfigChanged = true; }}>${this.musicStyle}</textarea>
               </div>
               <div class="dev-setting-row ${classMap({ changed: this.devBpm !== this.appliedBpm })}">
-                <label>BPM (60-200)</label>
-                <input type="number" min="60" max="200" step="1" .value=${this.devBpm.toString()} 
+                <label>BPM <span style="float: right; color: var(--accent);">${this.devBpm}</span></label>
+                <input type="range" min="60" max="200" step="1" .value=${this.devBpm.toString()} 
                        @input=${(e: Event) => { this.devBpm = parseInt((e.target as HTMLInputElement).value); this.requiresRestartConfigChanged = true; }}>
               </div>
               <div class="dev-setting-row ${classMap({ changed: this.devScale !== this.appliedScale })}">
@@ -1709,7 +1738,7 @@ class PromptDjMidi extends LitElement {
           <section class="sidebar-section">
             <h2 class="sidebar-title">Presets</h2>
             <div class="dev-setting-row" style="flex-direction: row; gap: 12px; margin-bottom: 24px;">
-              <input type="text" id="preset-name-input" placeholder="Name..." style="flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; color: #fff;">
+              <input type="text" id="preset-name-input" inputmode="none" placeholder="Name..." style="flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; color: #fff;">
               <button class="primary-btn" style="width: auto; margin: 0; padding: 0 24px; height: 44px; border-radius: 12px;" @click=${this.savePreset}>Save</button>
             </div>
             <div style="max-height: 40vh; overflow-y: auto; padding-right: 4px;">
