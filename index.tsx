@@ -1682,13 +1682,6 @@ class PromptDjMidi extends LitElement {
                 `)}
               </select>
             </div>
-            <div class="dev-setting-row ${classMap({ changed: this.devModelName !== this.activeModelNameInSession })}">
-              <label>Gemini Model</label>
-              <select @change=${(e: any) => { this.devModelName = e.target.value; this._updateDevSettingsChangedStatus(); }}>
-                <option value="gemini-3-flash-preview" ?selected=${this.devModelName === 'gemini-3-flash-preview'}>Gemini 3 Flash</option>
-                <option value="gemini-3.1-pro-preview" ?selected=${this.devModelName === 'gemini-3.1-pro-preview'}>Gemini 3.1 Pro</option>
-              </select>
-            </div>
             <div class="dev-setting-row" style="flex-direction: row; align-items: center; justify-content: space-between;">
               <label style="margin: 0;">Haptic Feedback</label>
               <input type="checkbox" .checked=${this.hapticsEnabled} @change=${(e: any) => this.hapticsEnabled = e.target.checked}>

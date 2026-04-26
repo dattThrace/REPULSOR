@@ -131,7 +131,8 @@ export class InitialSetupScreen extends LitElement {
       color: #555;
     }
     textarea,
-    input[type="text"] {
+    input[type="text"],
+    select {
       width: 100%;
       padding: 14px 18px;
       border-radius: 8px;
@@ -142,12 +143,22 @@ export class InitialSetupScreen extends LitElement {
       font-size: 0.95rem;
       transition: all 0.2s ease;
       font-family: inherit;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
     }
     textarea:focus,
-    input[type="text"]:focus {
+    input[type="text"]:focus,
+    select:focus {
       outline: none;
       border-color: #fff;
       background-color: #111;
+    }
+    select {
+      background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22#FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+      background-repeat: no-repeat, repeat;
+      background-position: right .7em top 50%, 0 0;
+      background-size: .65em auto, 100%;
     }
     textarea {
       min-height: 100px;
@@ -298,6 +309,7 @@ export class InitialSetupScreen extends LitElement {
 
   @state() private musicStyle = "90s boom-bap hip hop with jazzy samples and a laid-back groove";
   @state() private creativityLevel = 0.9; // Corresponds to Gemini's temperature (0.1 - 2.0)
+  @state() private genModelName = 'gemini-3-flash-preview';
   @state() private specificKnobs: SpecificKnobInput[] = [{ id: Date.now(), text: "Vinyl Crackle" }];
   @state() private isLoading = false;
 
@@ -450,7 +462,7 @@ Now, generate the full ${TOTAL_KNOBS} knobs according to all these rules.`;
 
     try {
       const response: GenerateContentResponse = await ai.models.generateContent({
-        model: GEMINI_MODEL_NAME,
+        model: this.genModelName,
         contents: userPromptContent,
         config: {
           systemInstruction: systemInstruction,
@@ -649,6 +661,20 @@ Now, generate the full ${TOTAL_KNOBS} knobs according to all these rules.`;
             aria-describedby="creativity-desc"
           />
           <small id="creativity-desc">Higher values (e.g., 1.0-2.0) make knob suggestions more wild and unpredictable. Lower values (e.g., 0.1-0.7) are more focused.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="generation-model">Generation Model</label>
+          <select
+            id="generation-model"
+            .value=${this.genModelName}
+            @change=${(e: Event) => this.genModelName = (e.target as HTMLSelectElement).value}
+            aria-describedby="generation-model-desc"
+          >
+            <option value="gemini-3-flash-preview">Gemini 3 Flash</option>
+            <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
+          </select>
+          <small id="generation-model-desc">Model used exclusively to generate board knobs.</small>
         </div>
 
         <div class="form-group">
