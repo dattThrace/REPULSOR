@@ -11,7 +11,7 @@ import { ToastMessage } from './ToastMessage';
 import './ToastMessage';
 
 // Use process.env.API_KEY as per guidelines
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY, apiVersion: 'v1alpha' });
 const GEMINI_MODEL_NAME = 'gemini-2.5-flash';
 const TOTAL_KNOBS = 16;
 const MAX_SPECIFIC_KNOBS = 4;

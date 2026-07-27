@@ -25,7 +25,7 @@ import { WeightHistoryGraph } from './components/WeightHistoryGraph';
 
 import type { Prompt, PlaybackState } from './types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY, apiVersion: 'v1alpha' });
 if (!process.env.API_KEY) {
   console.warn("[Lyria Debug] API_KEY is not defined in process.env. Lyria calls may fail.");
 } else {
@@ -356,7 +356,8 @@ class PromptDjMidi extends LitElement {
         bottom: 0;
         left: 0;
         right: 0;
-        height: 80vh;
+        max-height: 70vh;
+        height: auto;
         background: var(--panel-bg);
         padding: 24px 16px;
         display: flex;
@@ -364,7 +365,7 @@ class PromptDjMidi extends LitElement {
         gap: 32px;
         border-radius: 24px 24px 0 0;
         border-top: 1px solid var(--glass-border);
-        box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+        box-shadow: 0 -20px 40px rgba(0,0,0,0.7);
         z-index: 1000;
         overflow-y: auto;
         transform: translateY(100%);
@@ -372,6 +373,23 @@ class PromptDjMidi extends LitElement {
       }
       .sidebar-sections.open {
         transform: translateY(0);
+      }
+      .mobile-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.6);
+        backdrop-filter: blur(4px);
+        z-index: 999;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+      .mobile-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
       }
       .icon-btn {
         height: 48px;
@@ -976,14 +994,38 @@ class PromptDjMidi extends LitElement {
               }
             }
           },
-          onerror: (errEvent: ErrorEvent) => {
-            console.error('[Lyria Debug] LiveMusicSession error:', errEvent);
+          onerror: (errEvent: any) => {
+            let errMsg = 'Unknown error';
+            if (errEvent && errEvent.message) {
+                errMsg = String(errEvent.message);
+                if (errMsg === '[object Event]') errMsg = 'Connection failed';
+            } else if (errEvent && errEvent.type) {
+                errMsg = `Event type: ${errEvent.type}`;
+            } else if (typeof errEvent === 'string') {
+                errMsg = errEvent;
+            } else {
+                try {
+                    errMsg = JSON.stringify(errEvent);
+                    if (errMsg === '{}' && errEvent instanceof Event) errMsg = 'Connection failed';
+                } catch {
+                    errMsg = String(errEvent);
+                }
+            }
+            console.error('[Lyria Debug] LiveMusicSession error:', errMsg);
+            if (errEvent && errEvent.error) console.error('[Lyria Debug] Error object:', errEvent.error);
             this.connectionError = true;
             this.serverSetupComplete = false;
             this.playbackState = 'stopped';
             if(this.playPauseButton) this.playPauseButton.playbackState = 'stopped';
-            this.toastMessage?.show?.('Connection error, please restart audio.');
-            this.connectionStatusMessage = `Connection error: ${errEvent.message || 'Unknown error'}`;
+            
+            // Check if it's the generic WebSocket failure which happens for 403 Forbidden or 400 Bad Request
+            if (errMsg === 'Connection failed' || errMsg === 'Event type: error') {
+                this.toastMessage?.show?.('Connection failed: Check if your API key has lyria-realtime-exp access.');
+                this.connectionStatusMessage = `API Error: Model access denied or endpoint invalid.`;
+            } else {
+                this.toastMessage?.show?.('Connection error, please restart audio.');
+                this.connectionStatusMessage = `Connection error: ${errMsg}`;
+            }
             this._updateDevSettingsChangedStatus();
           },
           onclose: (closeEvent: CloseEvent) => {
@@ -1625,6 +1667,7 @@ class PromptDjMidi extends LitElement {
             </button>
           </div>
 
+          <div class="mobile-overlay ${classMap({ open: this.showMobileSettings })}" @click=${this.toggleMobileSettings}></div>
           <div class="sidebar-sections ${classMap({ open: this.showMobileSettings })}">
             <section class="sidebar-section">
               <h2 class="sidebar-title">Music Config</h2>
